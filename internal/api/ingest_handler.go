@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"log/slog"
+	"mime"
 	"net/http"
 
 	"github.com/aabreu10/siphon-gateway/internal/broker"
@@ -17,7 +18,9 @@ const maxPayloadSize = 1 << 20 // 1 MB
 func ingestHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.Hub, targetURL string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// check content-type
-		if ct := r.Header.Get("Content-Type"); ct != "application/json" {
+		ct := r.Header.Get("Content-Type")
+		mediaType, _, err := mime.ParseMediaType(ct)
+		if err != nil || mediaType != "application/json" {
 			http.Error(w, `{"error":"Content-Type must be application/json"}`, http.StatusUnsupportedMediaType)
 			return
 		}
