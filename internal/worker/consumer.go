@@ -16,8 +16,10 @@ import (
 )
 
 const (
-	maxRetries     = 5
-	deliveryTimout = 10 * time.Second
+	maxRetries      = 5
+	deliveryTimeout = 10 * time.Second
+	// Backwards-compatible alias (typo); prefer deliveryTimeout.
+	deliveryTimout = deliveryTimeout
 )
 
 // launches n workers that consume and deliver webhooks
