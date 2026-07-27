@@ -67,7 +67,8 @@ func ingestHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.H
 		}
 		if err := pub.PublishToProcess(r.Context(), msg); err != nil {
 			slog.Error("failed to publish to queue", "error", err, "webhook_id", id)
-			// already persisted, recovery can re-publish later
+			http.Error(w, `{"error":"internal server error"}`, http.StatusInternalServerError)
+			return
 		}
 
 		// broadcast sse event
