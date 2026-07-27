@@ -121,6 +121,9 @@ func processDelivery(ctx context.Context, logger *slog.Logger, d amqp.Delivery, 
 		}
 		if pubErr := pub.PublishToRetry(ctx, &msg); pubErr != nil {
 			logger.Error("failed to publish to retry queue", "error", pubErr)
+			// requeue the current delivery so we don't drop the webhook if RabbitMQ is unavailable
+			_ = d.Nack(false, true)
+			return
 		}
 		hub.Broadcast(&sse.Event{
 			Type: "retrying",
