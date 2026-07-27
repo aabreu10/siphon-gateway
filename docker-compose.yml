@@ -1,0 +1,78 @@
+services:
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-siphon}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-siphon_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-siphon_gateway}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-siphon} -d ${POSTGRES_DB:-siphon_gateway}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── RabbitMQ ─────────────────────────────────────────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  # ── Database Migrations ──────────────────────────────────────────────────────
+  migrate:
+    image: postgres:16-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/migrations:ro
+    entrypoint: >
+      sh -c "
+        for f in /migrations/*.sql; do
+          echo \"Applying $$f...\";
+          PGPASSWORD=${POSTGRES_PASSWORD:-siphon_secret} psql -h postgres -U ${POSTGRES_USER:-siphon} -d ${POSTGRES_DB:-siphon_gateway} -f $$f;
+        done;
+        echo 'Migrations complete.';
+      "
+
+  # ── Siphon Gateway (Go Backend) ─────────────────────────────────────────────
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      SERVER_PORT: "8080"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER:-siphon}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-siphon_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-siphon_gateway}
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      TARGET_URL: ${TARGET_URL:-http://host.docker.internal:9999/webhook}
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-5}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  pgdata:
