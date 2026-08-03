@@ -45,7 +45,8 @@
 
 <div
 	bind:this={divRef}
-	role="presentation"
+	role="group"
+	tabindex="0"
 	onmousemove={handleMouseMove}
 	onfocus={handleFocus}
 	onblur={handleBlur}

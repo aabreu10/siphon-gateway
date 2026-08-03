@@ -34,7 +34,7 @@
 		position: absolute;
 		inset: 0;
 		overflow: hidden;
-		pointer-events: none;
+		pointer-events: auto;
 		z-index: 0;
 	}
 
