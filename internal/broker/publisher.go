@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -22,6 +23,7 @@ type Message struct {
 
 // wraps an amqp channel for publishing
 type Publisher struct {
+	mu sync.Mutex
 	ch *amqp.Channel
 }
 
