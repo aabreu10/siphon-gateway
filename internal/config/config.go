@@ -29,7 +29,7 @@ func Load() *Config {
 		PostgresPassword:  getEnv("POSTGRES_PASSWORD", "siphon_secret"),
 		PostgresDB:        getEnv("POSTGRES_DB", "siphon_gateway"),
 		RabbitMQURL:       getEnv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/"),
-		TargetURL:         getEnv("TARGET_URL", "http://localhost:8080/api/v1/echo"),
+		TargetURL:         getEnv("TARGET_URL", "http://localhost:9999/webhook"),
 		WorkerConcurrency: getEnvInt("WORKER_CONCURRENCY", 5),
 	}
 }
