@@ -63,7 +63,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-siphon_secret}
       POSTGRES_DB: ${POSTGRES_DB:-siphon_gateway}
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
-      TARGET_URL: ${TARGET_URL:-http://host.docker.internal:9999/webhook}
+      TARGET_URL: ${TARGET_URL:-http://localhost:8080/api/v1/echo}
       WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-5}
     depends_on:
       postgres:
@@ -72,6 +72,19 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+    restart: unless-stopped
+
+  # ── Dashboard (SvelteKit) ──────────────────────────────────────────────────
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      ORIGIN: http://localhost:3000
+    depends_on:
+      - gateway
     restart: unless-stopped
 
 volumes:

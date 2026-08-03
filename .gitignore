@@ -38,3 +38,4 @@ docker-compose.override.yml
 dashboard/node_modules/
 dashboard/.svelte-kit/
 dashboard/build/
+node_modules/
