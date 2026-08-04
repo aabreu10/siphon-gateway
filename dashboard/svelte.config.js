@@ -6,6 +6,14 @@ const config = {
     preprocess: vitePreprocess(),
     kit: {
         adapter: adapter()
+    },
+    vitePlugin: {
+        dynamicCompileOptions({ filename }) {
+            if (filename.split(/[/\\]/).includes('node_modules')) {
+                return { runes: undefined };
+            }
+            return { runes: true };
+        }
     }
 };
 
