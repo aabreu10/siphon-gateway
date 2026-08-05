@@ -9,6 +9,7 @@ import (
 // gateway configuration from env vars
 type Config struct {
 	ServerPort        string
+	DatabaseURL       string
 	PostgresHost      string
 	PostgresPort      string
 	PostgresUser      string
@@ -23,6 +24,7 @@ type Config struct {
 func Load() *Config {
 	return &Config{
 		ServerPort:        getEnv("SERVER_PORT", "8080"),
+		DatabaseURL:       getEnv("DATABASE_URL", ""),
 		PostgresHost:      getEnv("POSTGRES_HOST", "localhost"),
 		PostgresPort:      getEnv("POSTGRES_PORT", "5432"),
 		PostgresUser:      getEnv("POSTGRES_USER", "siphon"),
@@ -36,6 +38,12 @@ func Load() *Config {
 
 // returns the postgres connection string
 func (c *Config) PostgresDSN() string {
+	// Si pasamos la URL completa desde Render, usamos esa directamente
+	if c.DatabaseURL != "" {
+		return c.DatabaseURL
+	}
+
+	// Si no (por ejemplo en local con Docker), construimos la URL como antes
 	return fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		c.PostgresUser, c.PostgresPassword, c.PostgresHost, c.PostgresPort, c.PostgresDB,
