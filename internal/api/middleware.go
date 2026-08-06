@@ -72,7 +72,7 @@ func AuthMiddleware() func(http.Handler) http.Handler {
 			
 			if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
 				providedToken = strings.TrimPrefix(authHeader, "Bearer ")
-			} else {
+			} else if r.URL.Path == "/api/v1/events" {
 				providedToken = r.URL.Query().Get("api_key")
 			}
 
