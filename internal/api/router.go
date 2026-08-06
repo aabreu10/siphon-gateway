@@ -6,12 +6,14 @@ import (
 	"github.com/go-chi/cors"
 
 	"github.com/aabreu10/siphon-gateway/internal/broker"
+	"github.com/aabreu10/siphon-gateway/internal/config"
 	"github.com/aabreu10/siphon-gateway/internal/database"
 	"github.com/aabreu10/siphon-gateway/internal/sse"
+	"golang.org/x/time/rate"
 )
 
 // creates the router with middleware and routes
-func NewRouter(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.Hub, targetURL string) *chi.Mux {
+func NewRouter(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.Hub, cfg *config.Config) *chi.Mux {
 	r := chi.NewRouter()
 
 	// middleware
@@ -32,11 +34,24 @@ func NewRouter(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.Hub, 
 
 	// api v1
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Post("/webhook", ingestHandler(repo, pub, hub, targetURL))
+		// ingest route (protected by INGEST_API_KEY + Rate Limiter)
+		r.Group(func(r chi.Router) {
+			r.Use(AuthMiddleware(cfg.IngestAPIKey))
+			r.Use(RateLimitMiddleware(NewIPRateLimiter(rate.Limit(50), 100))) // 50 rps
+			r.Post("/webhook", ingestHandler(repo, pub, hub, cfg.TargetURL))
+		})
+		
+		// echo route
 		r.Post("/echo", echoHandler())
-		r.Get("/webhooks", listHandler(repo))
-		r.Get("/events", sseHandler(hub))
-		r.Post("/webhook/{id}/replay", replayHandler(repo, pub, hub))
+		
+		// dashboard admin routes (protected by ADMIN_API_KEY)
+		r.Group(func(r chi.Router) {
+			r.Use(AuthMiddleware(cfg.AdminAPIKey))
+			r.Get("/webhooks", listHandler(repo))
+			r.Get("/events", sseHandler(hub))
+			r.Post("/webhook/{id}/replay", replayHandler(repo, pub, hub))
+			r.Get("/webhook/{id}/logs", logsHandler(repo))
+		})
 	})
 
 	return r
