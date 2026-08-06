@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -58,8 +57,8 @@ func TestIngestHandler_InvalidContentType(t *testing.T) {
 	rr := httptest.NewRecorder()
 	r.ServeHTTP(rr, req)
 
-	if status := rr.Code; status != http.UnsupportedMediaType {
+	if status := rr.Code; status != http.StatusUnsupportedMediaType {
 		t.Errorf("handler returned wrong status code: got %v want %v",
-			status, http.UnsupportedMediaType)
+			status, http.StatusUnsupportedMediaType)
 	}
 }
