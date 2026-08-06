@@ -1,9 +1,12 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"sync"
+	
+	"github.com/golang-jwt/jwt/v5"
 
 	"golang.org/x/time/rate"
 )
@@ -56,11 +59,59 @@ func RateLimitMiddleware(limiter *IPRateLimiter) func(http.Handler) http.Handler
 	}
 }
 
-// simple API key auth middleware
-func AuthMiddleware(expectedKey string) func(http.Handler) http.Handler {
+type contextKey string
+
+const UserIDKey contextKey = "user_id"
+
+// JWT Auth middleware
+func AuthMiddleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// if no key configured, bypass auth (development friendly)
+			authHeader := r.Header.Get("Authorization")
+			var providedToken string
+			
+			if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
+				providedToken = strings.TrimPrefix(authHeader, "Bearer ")
+			} else {
+				providedToken = r.URL.Query().Get("api_key")
+			}
+
+			if providedToken == "" {
+				http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+				return
+			}
+
+			token, err := jwt.Parse(providedToken, func(token *jwt.Token) (interface{}, error) {
+				return jwtSecret, nil // using jwtSecret from auth_handler.go
+			})
+
+			if err != nil || !token.Valid {
+				http.Error(w, `{"error":"forbidden"}`, http.StatusForbidden)
+				return
+			}
+
+			claims, ok := token.Claims.(jwt.MapClaims)
+			if !ok {
+				http.Error(w, `{"error":"forbidden"}`, http.StatusForbidden)
+				return
+			}
+
+			userIDStr, ok := claims["user_id"].(string)
+			if !ok {
+				http.Error(w, `{"error":"forbidden"}`, http.StatusForbidden)
+				return
+			}
+
+			ctx := context.WithValue(r.Context(), UserIDKey, userIDStr)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+// IngestAuthMiddleware protects the ingest route with a static key
+func IngestAuthMiddleware(expectedKey string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if expectedKey == "" {
 				next.ServeHTTP(w, r)
 				return

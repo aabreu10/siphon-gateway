@@ -4,7 +4,7 @@ const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 
 export function getAuthHeaders(): Record<string, string> {
 	if (typeof localStorage === 'undefined') return {};
-	const apiKey = localStorage.getItem('siphon_admin_key');
+	const apiKey = localStorage.getItem('siphon_jwt_token');
 	if (!apiKey) return {};
 	return { Authorization: `Bearer ${apiKey}` };
 }
@@ -89,6 +89,6 @@ export async function sendWebhook(
 }
 
 export function getSSEUrl(): string {
-	const apiKey = typeof localStorage !== 'undefined' ? localStorage.getItem('siphon_admin_key') : '';
+	const apiKey = typeof localStorage !== 'undefined' ? localStorage.getItem('siphon_jwt_token') : '';
 	return `${API_BASE}/api/v1/events?api_key=${apiKey}`;
 }

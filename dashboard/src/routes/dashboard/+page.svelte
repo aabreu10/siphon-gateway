@@ -47,7 +47,7 @@
 	});
 
 	onMount(() => {
-		const apiKey = localStorage.getItem('siphon_admin_key');
+		const apiKey = localStorage.getItem('siphon_jwt_token');
 		if (!apiKey) {
 			goto('/login');
 			return;

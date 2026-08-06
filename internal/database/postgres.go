@@ -12,11 +12,19 @@ import (
 const migrationSQL = `
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+CREATE TABLE IF NOT EXISTS users (
+    id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email         VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS endpoints (
     id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name        VARCHAR(100) NOT NULL,
     target_url  TEXT NOT NULL,
     secret_key  VARCHAR(100) NOT NULL,
+    user_id     UUID REFERENCES users(id) ON DELETE CASCADE,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -45,6 +53,7 @@ CREATE INDEX IF NOT EXISTS idx_webhooks_created_at ON webhooks(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_delivery_logs_webhook_id ON delivery_logs(webhook_id);
 
 ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS endpoint_id UUID REFERENCES endpoints(id) ON DELETE CASCADE;
+ALTER TABLE endpoints ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id) ON DELETE CASCADE;
 `
 
 // creates a postgres pool with retry logic and runs migrations
