@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import ShinyText from '$lib/components/svelte-bits/ShinyText.svelte';
-	import BorderGlowButton from '$lib/components/svelte-bits/BorderGlowButton.svelte';
+	import ShinyText from '$lib/components/landing/ShinyText.svelte';
+	import BorderGlowButton from '$lib/components/landing/BorderGlowButton.svelte';
 	import SpotlightCard from '$lib/components/svelte-bits/SpotlightCard.svelte';
 
-	let apiKey = '';
-	let error = '';
-	let isLoading = false;
+	let apiKey = $state('');
+	let error = $state('');
+	let isLoading = $state(false);
 
 	onMount(() => {
 		const existingKey = localStorage.getItem('siphon_admin_key');
@@ -53,7 +53,7 @@
 			<p>Enter your Admin API Key to access the dashboard.</p>
 		</div>
 
-		<form on:submit|preventDefault={handleLogin} class="login-form">
+		<form onsubmit={(e) => { e.preventDefault(); handleLogin(); }} class="login-form">
 			<div class="input-group">
 				<input
 					type="password"
@@ -67,7 +67,7 @@
 				<div class="error-msg">{error}</div>
 			{/if}
 
-			<div class="submit-btn" on:click={handleLogin}>
+			<div class="submit-btn" role="button" tabindex="0" onclick={handleLogin} onkeydown={(e) => { if (e.key === 'Enter') handleLogin(); }}>
 				<BorderGlowButton>
 					{isLoading ? 'Verifying...' : 'Sign In'}
 				</BorderGlowButton>

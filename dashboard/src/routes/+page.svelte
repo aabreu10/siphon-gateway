@@ -7,8 +7,6 @@
 
 	let copied = $state(false);
 
-	let copied = $state(false);
-
 	function copyCommand() {
 		navigator.clipboard.writeText('curl -X POST https://siphon.io/api/v1/ingest/YOUR_ENDPOINT_ID');
 		copied = true;
