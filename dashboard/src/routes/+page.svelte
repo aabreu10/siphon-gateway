@@ -1,14 +1,16 @@
 <script lang="ts">
-	import Balatro from '$lib/components/svelte-bits/Balatro.svelte';
-	import ShinyText from '$lib/components/landing/ShinyText.svelte';
-	import BorderGlowButton from '$lib/components/landing/BorderGlowButton.svelte';
-	import BentoGrid from '$lib/components/landing/BentoGrid.svelte';
-	import WebhookSimulator from '$lib/components/landing/WebhookSimulator.svelte';
+	import Balatro from "$lib/components/svelte-bits/Balatro.svelte";
+	import ShinyText from "$lib/components/landing/ShinyText.svelte";
+	import BorderGlowButton from "$lib/components/landing/BorderGlowButton.svelte";
+	import BentoGrid from "$lib/components/landing/BentoGrid.svelte";
+	import WebhookSimulator from "$lib/components/landing/WebhookSimulator.svelte";
 
 	let copied = $state(false);
 
 	function copyCommand() {
-		navigator.clipboard.writeText('curl -X POST https://siphon.io/api/v1/ingest/YOUR_ENDPOINT_ID');
+		navigator.clipboard.writeText(
+			"curl -X POST https://siphon.io/api/v1/ingest/YOUR_ENDPOINT_ID",
+		);
 		copied = true;
 		setTimeout(() => {
 			copied = false;
@@ -19,7 +21,12 @@
 <div class="landing-page">
 	<!-- Hero Section -->
 	<section class="hero-section">
-		<Balatro color1="#6c5ce7" color2="#5f3dc4" color3="#0a0b0f" mouseInteraction={true} />
+		<Balatro
+			color1="#6c5ce7"
+			color2="#5f3dc4"
+			color3="#0a0b0f"
+			mouseInteraction={true}
+		/>
 
 		<div class="hero-content">
 			<div class="pill-badge animate-fade-in-up">
@@ -27,33 +34,77 @@
 				<span>Enterprise-Grade Ingestion Engine</span>
 			</div>
 
-			<h1 class="hero-title animate-fade-in-up" style="animation-delay: 100ms">
-				<ShinyText text="Fault-Tolerant Webhook Infrastructure" speed={5} />
+			<h1
+				class="hero-title animate-fade-in-up"
+				style="animation-delay: 100ms"
+			>
+				<ShinyText
+					text="Fault-Tolerant Webhook Infrastructure"
+					speed={5}
+				/>
 			</h1>
 
-			<p class="hero-subtitle animate-fade-in-up" style="animation-delay: 200ms">
-				A resilient shock absorber between third-party webhook providers (Stripe, GitHub, Shopify) and your downstream internal servers. Prevent data loss with asynchronous queuing, exponential backoff retries, and granular cryptographic security.
+			<p
+				class="hero-subtitle animate-fade-in-up"
+				style="animation-delay: 200ms"
+			>
+				A resilient shock absorber between third-party webhook providers
+				(Stripe, GitHub, Shopify) and your downstream internal servers.
+				Prevent data loss with asynchronous queuing, exponential backoff
+				retries, and granular cryptographic security.
 			</p>
 
-			<div class="hero-actions animate-fade-in-up" style="animation-delay: 300ms">
+			<div
+				class="hero-actions animate-fade-in-up"
+				style="animation-delay: 300ms"
+			>
 				<BorderGlowButton href="/login">
 					Log In to Dashboard
-					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+					<svg
+						width="18"
+						height="18"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+					>
 						<line x1="5" y1="12" x2="19" y2="12"></line>
 						<polyline points="12 5 19 12 12 19"></polyline>
 					</svg>
 				</BorderGlowButton>
 
-				<button class="cli-command-pill" onclick={copyCommand} title="Copy Example API Call">
+				<button
+					class="cli-command-pill"
+					onclick={copyCommand}
+					title="Copy Example API Call"
+				>
 					<span class="cli-prompt">$</span>
-					<code class="cli-code">curl -X POST /api/v1/ingest/...</code>
+					<code class="cli-code">curl -X POST /api/v1/ingest/...</code
+					>
 					<span class="cli-copy">
 						{#if copied}
 							<span class="copied-text">✓ Copied</span>
 						{:else}
-							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-								<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-								<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+							<svg
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+							>
+								<rect
+									x="9"
+									y="9"
+									width="13"
+									height="13"
+									rx="2"
+									ry="2"
+								></rect>
+								<path
+									d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+								></path>
 							</svg>
 						{/if}
 					</span>
@@ -63,11 +114,16 @@
 	</section>
 
 	<!-- Interactive Sandbox Section -->
-	<section class="section-container animate-fade-in-up" style="animation-delay: 400ms">
+	<section
+		class="section-container animate-fade-in-up"
+		style="animation-delay: 400ms"
+	>
 		<div class="section-heading">
 			<h2 class="section-title">Test The Architecture Live</h2>
 			<p class="section-subtitle">
-				Click below to simulate real webhook payloads traveling through our highly available ingestion gateways and automated retry workers.
+				Click below to simulate real webhook payloads traveling through
+				our highly available ingestion gateways and automated retry
+				workers.
 			</p>
 		</div>
 
@@ -79,7 +135,8 @@
 		<div class="section-heading">
 			<h2 class="section-title">Engineered For Resilience</h2>
 			<p class="section-subtitle">
-				Every component is optimized for sub-millisecond ingestion, guaranteed message durability, and developer observability.
+				Every component is optimized for sub-millisecond ingestion,
+				guaranteed message durability, and developer observability.
 			</p>
 		</div>
 
@@ -89,8 +146,8 @@
 	<!-- Footer -->
 	<footer class="landing-footer">
 		<div class="footer-content">
-			<span class="footer-brand">Siphon Gateway SaaS</span>
-			<span class="footer-meta">Enterprise Webhook Delivery Network &copy; 2026</span>
+			<span class="footer-brand">Siphon Gateway</span>
+			<span class="footer-meta">Juan Abreu Navarro &copy; 2026</span>
 		</div>
 	</footer>
 </div>
@@ -112,7 +169,11 @@
 		min-height: 70vh;
 		padding: 48px 20px;
 		border-radius: var(--radius-xl);
-		background: radial-gradient(circle at 50% 20%, rgba(108, 92, 231, 0.12), transparent 70%);
+		background: radial-gradient(
+			circle at 50% 20%,
+			rgba(108, 92, 231, 0.12),
+			transparent 70%
+		);
 		border: 1px solid rgba(255, 255, 255, 0.05);
 		overflow: hidden;
 	}

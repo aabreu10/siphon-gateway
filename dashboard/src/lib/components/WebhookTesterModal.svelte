@@ -138,7 +138,7 @@
 			let lastId = '';
 
 			for (let i = 0; i < count; i++) {
-				const res = await sendWebhook(source, parsed, targetUrl ? targetUrl : undefined);
+				const res = await sendWebhook(source, parsed, targetUrl);
 				lastId = res.id;
 				if (count > 1) {
 					await new Promise((r) => setTimeout(r, 150));
