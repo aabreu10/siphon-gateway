@@ -108,9 +108,9 @@ func processDelivery(ctx context.Context, logger *slog.Logger, d amqp.Delivery, 
 
 	// failure
 	if err != nil {
-		logger.Warn("delivery failed with error", "error", err)
+		logger.Warn("delivery failed with error", "error", err, "target_url", msg.TargetURL)
 	} else {
-		logger.Warn("delivery failed with non-2xx status", "status_code", statusCode)
+		logger.Warn("delivery failed with non-2xx status", "status_code", statusCode, "target_url", msg.TargetURL)
 	}
 
 	msg.RetryCount++

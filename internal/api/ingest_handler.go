@@ -49,8 +49,14 @@ func ingestHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.H
 			source = "unknown"
 		}
 
+		// allow frontend to override target url
+		deliverTo := targetURL
+		if override := r.URL.Query().Get("target_url"); override != "" {
+			deliverTo = override
+		}
+
 		// save to db
-		id, err := repo.Insert(r.Context(), source, payload, targetURL)
+		id, err := repo.Insert(r.Context(), source, payload, deliverTo)
 		if err != nil {
 			slog.Error("failed to insert webhook", "error", err)
 			http.Error(w, `{"error":"internal server error"}`, http.StatusInternalServerError)
@@ -61,7 +67,7 @@ func ingestHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.H
 		msg := &broker.Message{
 			WebhookID:  id,
 			Payload:    payload,
-			TargetURL:  targetURL,
+			TargetURL:  deliverTo,
 			RetryCount: 0,
 			Source:     source,
 		}
