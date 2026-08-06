@@ -15,14 +15,14 @@
 		</div>
 		<h3 class="card-title">Zero-Loss Webhook Ingestion</h3>
 		<p class="card-desc">
-			Never drop a third-party webhook again. Siphon Gateway absorbs traffic spikes, immediately queues payloads into durable RabbitMQ exchanges, and returns an instant HTTP 200 OK to providers like Stripe or GitHub.
+			Never drop a third-party webhook again. Siphon absorbs traffic spikes, immediately queues payloads into highly durable persistent storage, and returns an instant HTTP 200 OK to providers like Stripe or GitHub.
 		</p>
 		<div class="card-visual visual-ingest">
-			<div class="flow-pill">POST /webhook</div>
+			<div class="flow-pill">POST /ingest</div>
 			<span class="flow-arrow">→</span>
 			<div class="flow-pill pulse-green">200 OK</div>
 			<span class="flow-arrow">→</span>
-			<div class="flow-pill rabbit-pill">RabbitMQ</div>
+			<div class="flow-pill rabbit-pill">Message Queue</div>
 		</div>
 	</SpotlightCard>
 
@@ -83,17 +83,17 @@
 		</div>
 		<h3 class="card-title">Real-time SSE Observability</h3>
 		<p class="card-desc">
-			Watch webhooks arrive, retry, and succeed in real time. Our Go backend broadcasts live event updates over HTTP Server-Sent Events (SSE) directly to your SvelteKit dashboard with zero polling overhead.
+			Watch webhooks arrive, retry, and succeed in real time. Our global ingest network broadcasts live event updates over HTTP Server-Sent Events (SSE) directly to your authenticated dashboard with zero polling overhead.
 		</p>
 		<div class="sse-visual">
-			<div class="sse-node go-node">Go Gateway</div>
+			<div class="sse-node go-node">Ingest Gateway</div>
 			<div class="sse-stream">
 				<span class="stream-dot"></span>
 				<span class="stream-dot"></span>
 				<span class="stream-dot"></span>
-				<span class="stream-label">SSE /api/v1/events</span>
+				<span class="stream-label">SSE /events</span>
 			</div>
-			<div class="sse-node svelte-node">SvelteKit UI</div>
+			<div class="sse-node svelte-node">Dashboard UI</div>
 		</div>
 	</SpotlightCard>
 

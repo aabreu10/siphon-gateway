@@ -43,6 +43,8 @@ CREATE TABLE IF NOT EXISTS delivery_logs (
 CREATE INDEX IF NOT EXISTS idx_webhooks_status ON webhooks(status);
 CREATE INDEX IF NOT EXISTS idx_webhooks_created_at ON webhooks(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_delivery_logs_webhook_id ON delivery_logs(webhook_id);
+
+ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS endpoint_id UUID REFERENCES endpoints(id) ON DELETE CASCADE;
 `
 
 // creates a postgres pool with retry logic and runs migrations

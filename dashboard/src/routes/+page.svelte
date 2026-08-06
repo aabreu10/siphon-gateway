@@ -8,7 +8,7 @@
 	let copied = $state(false);
 
 	function copyCommand() {
-		navigator.clipboard.writeText('docker compose up -d --build');
+		navigator.clipboard.writeText('curl -X POST https://siphon.io/api/v1/ingest/YOUR_ENDPOINT_ID');
 		copied = true;
 		setTimeout(() => {
 			copied = false;
@@ -24,29 +24,29 @@
 		<div class="hero-content">
 			<div class="pill-badge animate-fade-in-up">
 				<span class="pulse-dot"></span>
-				<span>Go + SvelteKit 5 Open-Source Engine</span>
+				<span>Enterprise-Grade Ingestion Engine</span>
 			</div>
 
 			<h1 class="hero-title animate-fade-in-up" style="animation-delay: 100ms">
-				<ShinyText text="Fault-Tolerant Webhook Ingestion & Retry Engine" speed={5} />
+				<ShinyText text="Fault-Tolerant Webhook Infrastructure" speed={5} />
 			</h1>
 
 			<p class="hero-subtitle animate-fade-in-up" style="animation-delay: 200ms">
-				A resilient shock absorber between third-party webhook providers (Stripe, GitHub, Shopify) and downstream internal servers. Prevent data loss with asynchronous RabbitMQ queuing, exponential backoff retries, and a real-time Server-Sent Events observability dashboard.
+				A resilient shock absorber between third-party webhook providers (Stripe, GitHub, Shopify) and your downstream internal servers. Prevent data loss with asynchronous queuing, exponential backoff retries, and granular cryptographic security.
 			</p>
 
 			<div class="hero-actions animate-fade-in-up" style="animation-delay: 300ms">
-				<BorderGlowButton href="/dashboard">
-					Launch Live Dashboard
+				<BorderGlowButton href="/login">
+					Log In to Dashboard
 					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
 						<line x1="5" y1="12" x2="19" y2="12"></line>
 						<polyline points="12 5 19 12 12 19"></polyline>
 					</svg>
 				</BorderGlowButton>
 
-				<button class="cli-command-pill" onclick={copyCommand} title="Copy Docker start command">
+				<button class="cli-command-pill" onclick={copyCommand} title="Copy Example API Call">
 					<span class="cli-prompt">$</span>
-					<code class="cli-code">docker compose up -d --build</code>
+					<code class="cli-code">curl -X POST /api/v1/ingest/...</code>
 					<span class="cli-copy">
 						{#if copied}
 							<span class="copied-text">✓ Copied</span>
@@ -67,7 +67,7 @@
 		<div class="section-heading">
 			<h2 class="section-title">Test The Architecture Live</h2>
 			<p class="section-subtitle">
-				Click below to simulate real webhook payloads traveling through our Go Ingestion API, RabbitMQ broker, and automated retry workers.
+				Click below to simulate real webhook payloads traveling through our highly available ingestion gateways and automated retry workers.
 			</p>
 		</div>
 
@@ -89,8 +89,8 @@
 	<!-- Footer -->
 	<footer class="landing-footer">
 		<div class="footer-content">
-			<span class="footer-brand">Siphon Gateway</span>
-			<span class="footer-meta">Built with Go 1.22, RabbitMQ, PostgreSQL, and SvelteKit 5 Runes</span>
+			<span class="footer-brand">Siphon Gateway SaaS</span>
+			<span class="footer-meta">Enterprise Webhook Delivery Network &copy; 2026</span>
 		</div>
 	</footer>
 </div>

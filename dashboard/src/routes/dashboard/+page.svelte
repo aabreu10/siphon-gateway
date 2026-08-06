@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import type { Webhook, SSEEvent } from '$lib/types';
 	import { fetchWebhooks, getSSEUrl } from '$lib/api';
 	import WebhookTable from '$lib/components/WebhookTable.svelte';
@@ -27,16 +28,32 @@
 		failed: webhooks.filter((w) => w.status === 'FAILED_DLQ').length
 	});
 
-	let filteredWebhooks = $derived(
-		webhooks.filter((w) => {
-			const matchesStatus = statusFilter === 'ALL' || w.status === statusFilter;
-			const matchesSearch = w.source.toLowerCase().includes(searchQuery.toLowerCase()) || w.id.includes(searchQuery);
-			return matchesStatus && matchesSearch;
-		})
-	);
+	let filteredWebhooks = $derived(webhooks);
+
+	let searchTimeout: ReturnType<typeof setTimeout>;
+	
+	function handleSearchChange() {
+		clearTimeout(searchTimeout);
+		searchTimeout = setTimeout(() => {
+			loadInitialData();
+		}, 300);
+	}
+
+	$effect(() => {
+		// when statusFilter changes, reload
+		if (statusFilter) {
+			loadInitialData();
+		}
+	});
 
 	onMount(() => {
-		// Initial load (fire-and-forget — no cleanup needed)
+		const apiKey = localStorage.getItem('siphon_admin_key');
+		if (!apiKey) {
+			goto('/login');
+			return;
+		}
+
+		// Initial load
 		loadInitialData();
 
 		// SSE connection
@@ -170,8 +187,8 @@
 				</button>
 			</div>
 			<div class="header-filters">
-				<input type="text" class="search-input" placeholder="Search ID or Source..." bind:value={searchQuery} />
-				<select class="status-select" bind:value={statusFilter}>
+				<input type="text" class="search-input" placeholder="Search ID or Source..." bind:value={searchQuery} oninput={handleSearchChange} />
+				<select class="status-select" bind:value={statusFilter} onchange={handleSearchChange}>
 					<option value="ALL">All Statuses</option>
 					<option value="SUCCESS">Success</option>
 					<option value="PENDING">Pending</option>

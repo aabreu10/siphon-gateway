@@ -41,12 +41,12 @@ func NewWebhookRepo(pool *pgxpool.Pool) *WebhookRepo {
 }
 
 // inserts a webhook and returns its id
-func (r *WebhookRepo) Insert(ctx context.Context, source string, payload map[string]interface{}, targetURL string) (uuid.UUID, error) {
+func (r *WebhookRepo) Insert(ctx context.Context, source string, payload map[string]interface{}, targetURL string, endpointID uuid.UUID) (uuid.UUID, error) {
 	id := uuid.New()
 	_, err := r.pool.Exec(ctx,
-		`INSERT INTO webhooks (id, source, payload, target_url, status, retry_count, created_at, updated_at)
-		 VALUES ($1, $2, $3, $4, 'PENDING', 0, NOW(), NOW())`,
-		id, source, payload, targetURL,
+		`INSERT INTO webhooks (id, source, payload, target_url, endpoint_id, status, retry_count, created_at, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, 'PENDING', 0, NOW(), NOW())`,
+		id, source, payload, targetURL, endpointID,
 	)
 	return id, err
 }
@@ -73,18 +73,24 @@ func (r *WebhookRepo) GetByID(ctx context.Context, id uuid.UUID) (*Webhook, erro
 	return w, nil
 }
 
-// returns recent webhooks with pagination
-func (r *WebhookRepo) ListRecent(ctx context.Context, limit, offset int) ([]Webhook, int, error) {
+// returns recent webhooks with pagination, status filter, and search
+func (r *WebhookRepo) ListRecent(ctx context.Context, limit, offset int, status string, search string) ([]Webhook, int, error) {
 	var total int
-	err := r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM webhooks`).Scan(&total)
+	
+	countQuery := `SELECT COUNT(*) FROM webhooks WHERE ($1 = '' OR status = $1) AND ($2 = '' OR source ILIKE '%' || $2 || '%' OR id::text ILIKE '%' || $2 || '%')`
+	err := r.pool.QueryRow(ctx, countQuery, status, search).Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	rows, err := r.pool.Query(ctx,
-		`SELECT id, source, payload, target_url, status, retry_count, created_at, updated_at
-		 FROM webhooks ORDER BY created_at DESC LIMIT $1 OFFSET $2`, limit, offset,
-	)
+	query := `
+		SELECT id, source, payload, target_url, status, retry_count, created_at, updated_at
+		FROM webhooks
+		WHERE ($3 = '' OR status = $3) AND ($4 = '' OR source ILIKE '%' || $4 || '%' OR id::text ILIKE '%' || $4 || '%')
+		ORDER BY created_at DESC
+		LIMIT $1 OFFSET $2
+	`
+	rows, err := r.pool.Query(ctx, query, limit, offset, status, search)
 	if err != nil {
 		return nil, 0, err
 	}
