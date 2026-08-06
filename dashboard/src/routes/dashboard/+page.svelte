@@ -177,13 +177,27 @@
 		</SpotlightCard>
 	</section>
 
+	<!-- Integration Details -->
+	<section class="integration-card glass-panel animate-fade-in-up" style="animation-delay: 125ms" aria-label="Integration Details">
+		<div class="integration-content">
+			<div class="integration-text">
+				<h2 class="section-title">Integration Details</h2>
+				<p class="integration-desc">Point your third-party providers (Stripe, GitHub, etc.) to your Siphon Gateway ingestion URL to start buffering webhooks.</p>
+			</div>
+			<div class="integration-code-box">
+				<span class="method-badge">POST</span>
+				<code class="url-code">https://siphon.io/api/v1/webhook</code>
+			</div>
+		</div>
+	</section>
+
 	<!-- Webhook Table -->
 	<section class="table-section animate-fade-in-up" style="animation-delay: 150ms" aria-label="Webhook Log">
 		<div class="section-header">
 			<div class="header-left">
 				<h2 class="section-title">Live Event Log</h2>
 				<button class="btn-test-webhook-sm" onclick={() => (showTesterModal = true)}>
-					⚡ Test Webhook
+					⚡ Simulate Event
 				</button>
 			</div>
 			<div class="header-filters">
@@ -330,6 +344,65 @@
 		color: var(--color-text-muted);
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
+	}
+
+	/* ── Integration Details ─────────────────────────────────────────── */
+	.integration-card {
+		padding: 20px 28px;
+		border-radius: var(--radius-lg);
+		border: 1px solid rgba(108, 92, 231, 0.2);
+		background: rgba(10, 11, 15, 0.6);
+	}
+
+	.integration-content {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 20px;
+	}
+
+	.integration-text {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.integration-desc {
+		font-size: 0.85rem;
+		color: var(--color-text-muted);
+		margin: 0;
+	}
+
+	.integration-code-box {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		background: rgba(0, 0, 0, 0.4);
+		padding: 8px 16px;
+		border-radius: var(--radius-md);
+		border: 1px solid var(--color-border);
+	}
+
+	.method-badge {
+		font-size: 0.7rem;
+		font-weight: 700;
+		color: var(--color-success);
+		background: var(--color-success-glow);
+		padding: 3px 8px;
+		border-radius: 4px;
+	}
+
+	.url-code {
+		font-family: var(--font-mono);
+		font-size: 0.85rem;
+		color: var(--color-text-primary);
+	}
+
+	@media (max-width: 768px) {
+		.integration-content {
+			flex-direction: column;
+			align-items: flex-start;
+		}
 	}
 
 	/* ── Table Section ───────────────────────────────────────────────── */
