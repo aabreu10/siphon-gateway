@@ -9,13 +9,22 @@ import (
 	"github.com/aabreu10/siphon-gateway/internal/broker"
 	"github.com/aabreu10/siphon-gateway/internal/database"
 	"github.com/aabreu10/siphon-gateway/internal/sse"
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 const maxPayloadSize = 1 << 20 // 1 MB
 
-// handles POST /api/v1/webhook — validates, persists, publishes, returns id
-func ingestHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.Hub, targetURL string) http.HandlerFunc {
+// handles POST /api/v1/ingest/{endpoint_id} — validates, persists, publishes, returns id
+func ingestHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.Hub) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		endpointIDStr := chi.URLParam(r, "endpoint_id")
+		endpointID, err := uuid.Parse(endpointIDStr)
+		if err != nil {
+			http.Error(w, `{"error":"invalid endpoint_id"}`, http.StatusBadRequest)
+			return
+		}
+
 		// check content-type
 		if ct := r.Header.Get("Content-Type"); ct != "application/json" {
 			http.Error(w, `{"error":"Content-Type must be application/json"}`, http.StatusUnsupportedMediaType)
@@ -46,14 +55,16 @@ func ingestHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.H
 			source = "unknown"
 		}
 
-		// allow frontend to override target url
-		deliverTo := targetURL
-		if override := r.URL.Query().Get("target_url"); override != "" {
-			deliverTo = override
+		// verify endpoint exists
+		endpoint, err := repo.GetEndpoint(r.Context(), endpointID)
+		if err != nil {
+			slog.Error("endpoint not found", "error", err, "endpoint_id", endpointID)
+			http.Error(w, `{"error":"endpoint not found"}`, http.StatusNotFound)
+			return
 		}
 
 		// save to db
-		id, err := repo.Insert(r.Context(), source, payload, deliverTo)
+		id, err := repo.Insert(r.Context(), source, payload, endpoint.TargetURL, endpointID)
 		if err != nil {
 			slog.Error("failed to insert webhook", "error", err)
 			http.Error(w, `{"error":"internal server error"}`, http.StatusInternalServerError)
@@ -63,8 +74,10 @@ func ingestHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.H
 		// publish to queue
 		msg := &broker.Message{
 			WebhookID:  id,
+			EndpointID: endpointID,
 			Payload:    payload,
-			TargetURL:  deliverTo,
+			TargetURL:  endpoint.TargetURL,
+			SecretKey:  endpoint.SecretKey,
 			RetryCount: 0,
 			Source:     source,
 		}
@@ -80,7 +93,7 @@ func ingestHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.H
 				"id":          id,
 				"source":      source,
 				"payload":     payload,
-				"target_url":  targetURL,
+				"target_url":  endpoint.TargetURL,
 				"status":      "PENDING",
 				"retry_count": 0,
 			},

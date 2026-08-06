@@ -92,7 +92,7 @@ func processDelivery(ctx context.Context, logger *slog.Logger, d amqp.Delivery, 
 	)
 
 	// attempt delivery
-	statusCode, responseBody, err := deliver(msg.Payload, msg.TargetURL)
+	statusCode, responseBody, err := deliver(msg.Payload, msg.TargetURL, msg.SecretKey)
 
 	// save delivery log
 	if dbErr := repo.InsertDeliveryLog(ctx, msg.WebhookID, msg.RetryCount+1, statusCode, responseBody); dbErr != nil {
@@ -154,14 +154,17 @@ func processDelivery(ctx context.Context, logger *slog.Logger, d amqp.Delivery, 
 }
 
 // posts the payload to the target url, returns status code and response body
-func deliver(payload map[string]interface{}, targetURL string) (int, string, error) {
+func deliver(payload map[string]interface{}, targetURL, secretKey string) (int, string, error) {
 	body, err := json.Marshal(payload)
 	if err != nil {
 		return 0, "", fmt.Errorf("marshal payload: %w", err)
 	}
 
-	// Calculate HMAC signature (using a default secret for now)
-	h := hmac.New(sha256.New, []byte("siphon_secret"))
+	// Calculate HMAC signature
+	if secretKey == "" {
+		secretKey = "default_secret" // fallback just in case
+	}
+	h := hmac.New(sha256.New, []byte(secretKey))
 	h.Write(body)
 	signature := hex.EncodeToString(h.Sum(nil))
 

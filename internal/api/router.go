@@ -38,7 +38,7 @@ func NewRouter(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.Hub, 
 		r.Group(func(r chi.Router) {
 			r.Use(AuthMiddleware(cfg.IngestAPIKey))
 			r.Use(RateLimitMiddleware(NewIPRateLimiter(rate.Limit(50), 100))) // 50 rps
-			r.Post("/webhook", ingestHandler(repo, pub, hub, cfg.TargetURL))
+			r.Post("/ingest/{endpoint_id}", ingestHandler(repo, pub, hub))
 		})
 		
 		// echo route
@@ -51,6 +51,11 @@ func NewRouter(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.Hub, 
 			r.Get("/events", sseHandler(hub))
 			r.Post("/webhook/{id}/replay", replayHandler(repo, pub, hub))
 			r.Get("/webhook/{id}/logs", logsHandler(repo))
+
+			// endpoints
+			r.Get("/endpoints", listEndpointsHandler(repo))
+			r.Post("/endpoints", createEndpointHandler(repo))
+			r.Get("/endpoints/{id}", getEndpointHandler(repo))
 		})
 	})
 

@@ -27,8 +27,14 @@ func listHandler(repo *database.WebhookRepo) http.HandlerFunc {
 				offset = v
 			}
 		}
+		
+		status := r.URL.Query().Get("status")
+		if status == "ALL" {
+			status = ""
+		}
+		search := r.URL.Query().Get("search")
 
-		webhooks, total, err := repo.ListRecent(r.Context(), limit, offset)
+		webhooks, total, err := repo.ListRecent(r.Context(), limit, offset, status, search)
 		if err != nil {
 			slog.Error("failed to list webhooks", "error", err)
 			http.Error(w, `{"error":"internal server error"}`, http.StatusInternalServerError)

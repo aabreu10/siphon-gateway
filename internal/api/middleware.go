@@ -67,12 +67,19 @@ func AuthMiddleware(expectedKey string) func(http.Handler) http.Handler {
 			}
 
 			authHeader := r.Header.Get("Authorization")
-			if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+			var providedKey string
+			
+			if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
+				providedKey = strings.TrimPrefix(authHeader, "Bearer ")
+			} else {
+				providedKey = r.URL.Query().Get("api_key")
+			}
+
+			if providedKey == "" {
 				http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
 				return
 			}
 
-			providedKey := strings.TrimPrefix(authHeader, "Bearer ")
 			if providedKey != expectedKey {
 				http.Error(w, `{"error":"forbidden"}`, http.StatusForbidden)
 				return
