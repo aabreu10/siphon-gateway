@@ -58,8 +58,7 @@ func ingestHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.H
 			source = "unknown"
 		}
 
-		// verify endpoint exists
-		endpoint, err := repo.GetEndpoint(r.Context(), endpointID)
+		endpoint, err := repo.GetEndpointForIngest(r.Context(), endpointID)
 		if err != nil {
 			slog.Error("endpoint not found", "error", err, "endpoint_id", endpointID)
 			http.Error(w, `{"error":"endpoint not found"}`, http.StatusNotFound)

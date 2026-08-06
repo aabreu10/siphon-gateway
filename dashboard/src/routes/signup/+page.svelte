@@ -17,7 +17,7 @@
 		}
 	});
 
-	async function handleLogin() {
+	async function handleSignup() {
 		if (!email.trim() || !password.trim()) {
 			error = 'Email and password are required';
 			return;
@@ -28,7 +28,7 @@
 
 		try {
 			const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
-			const res = await fetch(`${API_BASE}/api/v1/auth/login`, {
+			const res = await fetch(`${API_BASE}/api/v1/auth/signup`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ email, password })
@@ -39,7 +39,8 @@
 				localStorage.setItem('siphon_jwt_token', data.token);
 				goto('/dashboard');
 			} else {
-				error = 'Invalid credentials';
+				const errData = await res.json().catch(() => ({}));
+				error = errData.error || 'Failed to create account';
 			}
 		} catch (err) {
 			error = 'Failed to connect to the server';
@@ -53,10 +54,10 @@
 	<SpotlightCard class="login-card glass-panel hover-glow">
 		<div class="login-header">
 			<h2><ShinyText text="Siphon Gateway" speed={3} /></h2>
-			<p>Login to manage your Webhook Infrastructure.</p>
+			<p>Create an account to manage your Webhook Infrastructure.</p>
 		</div>
 
-		<form onsubmit={(e) => { e.preventDefault(); handleLogin(); }} class="login-form">
+		<form onsubmit={(e) => { e.preventDefault(); handleSignup(); }} class="login-form">
 			<div class="input-group">
 				<input
 					type="email"
@@ -76,14 +77,14 @@
 				<div class="error-msg">{error}</div>
 			{/if}
 
-			<div class="submit-btn" role="button" tabindex="0" onclick={handleLogin} onkeydown={(e) => { if (e.key === 'Enter') handleLogin(); }}>
+			<div class="submit-btn" role="button" tabindex="0" onclick={handleSignup} onkeydown={(e) => { if (e.key === 'Enter') handleSignup(); }}>
 				<BorderGlowButton>
-					{isLoading ? 'Authenticating...' : 'Sign In'}
+					{isLoading ? 'Creating Account...' : 'Sign Up'}
 				</BorderGlowButton>
 			</div>
 
 			<div class="signup-link">
-				Don't have an account? <a href="/signup">Sign up</a>
+				Already have an account? <a href="/login">Log in</a>
 			</div>
 		</form>
 	</SpotlightCard>

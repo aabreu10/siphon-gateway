@@ -29,7 +29,18 @@ func createEndpointHandler(repo *database.WebhookRepo) http.HandlerFunc {
 			return
 		}
 
-		id, err := repo.CreateEndpoint(r.Context(), req.Name, req.TargetURL, req.SecretKey)
+		userIDStr, ok := r.Context().Value(UserIDKey).(string)
+		if !ok {
+			http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+			return
+		}
+		userID, err := uuid.Parse(userIDStr)
+		if err != nil {
+			http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+			return
+		}
+
+		id, err := repo.CreateEndpoint(r.Context(), req.Name, req.TargetURL, req.SecretKey, userID)
 		if err != nil {
 			slog.Error("failed to create endpoint", "error", err)
 			http.Error(w, `{"error":"internal server error"}`, http.StatusInternalServerError)
@@ -48,7 +59,18 @@ func createEndpointHandler(repo *database.WebhookRepo) http.HandlerFunc {
 
 func listEndpointsHandler(repo *database.WebhookRepo) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		endpoints, err := repo.ListEndpoints(r.Context())
+		userIDStr, ok := r.Context().Value(UserIDKey).(string)
+		if !ok {
+			http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+			return
+		}
+		userID, err := uuid.Parse(userIDStr)
+		if err != nil {
+			http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+			return
+		}
+
+		endpoints, err := repo.ListEndpoints(r.Context(), userID)
 		if err != nil {
 			slog.Error("failed to list endpoints", "error", err)
 			http.Error(w, `{"error":"internal server error"}`, http.StatusInternalServerError)
@@ -73,7 +95,18 @@ func getEndpointHandler(repo *database.WebhookRepo) http.HandlerFunc {
 			return
 		}
 
-		endpoint, err := repo.GetEndpoint(r.Context(), id)
+		userIDStr, ok := r.Context().Value(UserIDKey).(string)
+		if !ok {
+			http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+			return
+		}
+		userID, err := uuid.Parse(userIDStr)
+		if err != nil {
+			http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+			return
+		}
+
+		endpoint, err := repo.GetEndpoint(r.Context(), id, userID)
 		if err != nil {
 			http.Error(w, `{"error":"endpoint not found"}`, http.StatusNotFound)
 			return

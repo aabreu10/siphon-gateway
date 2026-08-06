@@ -5,8 +5,17 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+// a row in the users table
+type User struct {
+	ID           uuid.UUID `json:"id"`
+	Email        string    `json:"email"`
+	PasswordHash string    `json:"-"`
+	CreatedAt    time.Time `json:"created_at"`
+}
 
 // a row in the webhooks table
 type Webhook struct {
@@ -38,6 +47,32 @@ type WebhookRepo struct {
 // creates a new repo
 func NewWebhookRepo(pool *pgxpool.Pool) *WebhookRepo {
 	return &WebhookRepo{pool: pool}
+}
+
+// User Operations
+
+func (r *WebhookRepo) CreateUser(ctx context.Context, email, passwordHash string) (uuid.UUID, error) {
+	id := uuid.New()
+	_, err := r.pool.Exec(ctx,
+		`INSERT INTO users (id, email, password_hash, created_at) VALUES ($1, $2, $3, NOW())`,
+		id, email, passwordHash,
+	)
+	return id, err
+}
+
+func (r *WebhookRepo) GetUserByEmail(ctx context.Context, email string) (*User, error) {
+	var u User
+	err := r.pool.QueryRow(ctx,
+		`SELECT id, email, password_hash, created_at FROM users WHERE email = $1`,
+		email,
+	).Scan(&u.ID, &u.Email, &u.PasswordHash, &u.CreatedAt)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil // Not found
+		}
+		return nil, err
+	}
+	return &u, nil
 }
 
 // inserts a webhook and returns its id
@@ -74,23 +109,31 @@ func (r *WebhookRepo) GetByID(ctx context.Context, id uuid.UUID) (*Webhook, erro
 }
 
 // returns recent webhooks with pagination, status filter, and search
-func (r *WebhookRepo) ListRecent(ctx context.Context, limit, offset int, status string, search string) ([]Webhook, int, error) {
+func (r *WebhookRepo) ListRecent(ctx context.Context, limit, offset int, status string, search string, userID uuid.UUID) ([]Webhook, int, error) {
 	var total int
 	
-	countQuery := `SELECT COUNT(*) FROM webhooks WHERE ($1 = '' OR status = $1) AND ($2 = '' OR source ILIKE '%' || $2 || '%' OR id::text ILIKE '%' || $2 || '%')`
-	err := r.pool.QueryRow(ctx, countQuery, status, search).Scan(&total)
+	countQuery := `
+		SELECT COUNT(*) FROM webhooks w
+		JOIN endpoints e ON w.endpoint_id = e.id
+		WHERE e.user_id = $1
+		AND ($2 = '' OR w.status = $2) 
+		AND ($3 = '' OR w.source ILIKE '%' || $3 || '%' OR w.id::text ILIKE '%' || $3 || '%')`
+	err := r.pool.QueryRow(ctx, countQuery, userID, status, search).Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	query := `
-		SELECT id, source, payload, target_url, status, retry_count, created_at, updated_at
-		FROM webhooks
-		WHERE ($3 = '' OR status = $3) AND ($4 = '' OR source ILIKE '%' || $4 || '%' OR id::text ILIKE '%' || $4 || '%')
-		ORDER BY created_at DESC
-		LIMIT $1 OFFSET $2
+		SELECT w.id, w.source, w.payload, w.target_url, w.status, w.retry_count, w.created_at, w.updated_at
+		FROM webhooks w
+		JOIN endpoints e ON w.endpoint_id = e.id
+		WHERE e.user_id = $1
+		AND ($2 = '' OR w.status = $2) 
+		AND ($3 = '' OR w.source ILIKE '%' || $3 || '%' OR w.id::text ILIKE '%' || $3 || '%')
+		ORDER BY w.created_at DESC
+		LIMIT $4 OFFSET $5
 	`
-	rows, err := r.pool.Query(ctx, query, limit, offset, status, search)
+	rows, err := r.pool.Query(ctx, query, userID, status, search, limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -147,35 +190,48 @@ type Endpoint struct {
 	Name      string    `json:"name"`
 	TargetURL string    `json:"target_url"`
 	SecretKey string    `json:"secret_key"`
+	UserID    uuid.UUID `json:"user_id"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
 // creates a new endpoint
-func (r *WebhookRepo) CreateEndpoint(ctx context.Context, name, targetURL, secretKey string) (uuid.UUID, error) {
+func (r *WebhookRepo) CreateEndpoint(ctx context.Context, name, targetURL, secretKey string, userID uuid.UUID) (uuid.UUID, error) {
 	id := uuid.New()
 	_, err := r.pool.Exec(ctx,
-		`INSERT INTO endpoints (id, name, target_url, secret_key, created_at)
-		 VALUES ($1, $2, $3, $4, NOW())`,
-		id, name, targetURL, secretKey,
+		`INSERT INTO endpoints (id, name, target_url, secret_key, user_id, created_at)
+		 VALUES ($1, $2, $3, $4, $5, NOW())`,
+		id, name, targetURL, secretKey, userID,
 	)
 	return id, err
 }
 
-// fetches an endpoint by ID
-func (r *WebhookRepo) GetEndpoint(ctx context.Context, id uuid.UUID) (*Endpoint, error) {
+// fetches an endpoint by ID and userID
+func (r *WebhookRepo) GetEndpoint(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*Endpoint, error) {
 	e := &Endpoint{}
 	err := r.pool.QueryRow(ctx,
-		`SELECT id, name, target_url, secret_key, created_at FROM endpoints WHERE id = $1`, id,
-	).Scan(&e.ID, &e.Name, &e.TargetURL, &e.SecretKey, &e.CreatedAt)
+		`SELECT id, name, target_url, secret_key, user_id, created_at FROM endpoints WHERE id = $1 AND user_id = $2`, id, userID,
+	).Scan(&e.ID, &e.Name, &e.TargetURL, &e.SecretKey, &e.UserID, &e.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
 	return e, nil
 }
 
-// lists all endpoints
-func (r *WebhookRepo) ListEndpoints(ctx context.Context) ([]Endpoint, error) {
-	rows, err := r.pool.Query(ctx, `SELECT id, name, target_url, secret_key, created_at FROM endpoints ORDER BY created_at DESC`)
+// fetches an endpoint by ID only (for ingestion)
+func (r *WebhookRepo) GetEndpointForIngest(ctx context.Context, id uuid.UUID) (*Endpoint, error) {
+	e := &Endpoint{}
+	err := r.pool.QueryRow(ctx,
+		`SELECT id, name, target_url, secret_key, user_id, created_at FROM endpoints WHERE id = $1`, id,
+	).Scan(&e.ID, &e.Name, &e.TargetURL, &e.SecretKey, &e.UserID, &e.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return e, nil
+}
+
+// lists all endpoints for a user
+func (r *WebhookRepo) ListEndpoints(ctx context.Context, userID uuid.UUID) ([]Endpoint, error) {
+	rows, err := r.pool.Query(ctx, `SELECT id, name, target_url, secret_key, user_id, created_at FROM endpoints WHERE user_id = $1 ORDER BY created_at DESC`, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +240,7 @@ func (r *WebhookRepo) ListEndpoints(ctx context.Context) ([]Endpoint, error) {
 	var endpoints []Endpoint
 	for rows.Next() {
 		var e Endpoint
-		if err := rows.Scan(&e.ID, &e.Name, &e.TargetURL, &e.SecretKey, &e.CreatedAt); err != nil {
+		if err := rows.Scan(&e.ID, &e.Name, &e.TargetURL, &e.SecretKey, &e.UserID, &e.CreatedAt); err != nil {
 			return nil, err
 		}
 		endpoints = append(endpoints, e)

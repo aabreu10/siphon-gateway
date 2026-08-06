@@ -34,7 +34,18 @@ func listHandler(repo *database.WebhookRepo) http.HandlerFunc {
 		}
 		search := r.URL.Query().Get("search")
 
-		webhooks, total, err := repo.ListRecent(r.Context(), limit, offset, status, search)
+		userIDStr, ok := r.Context().Value(UserIDKey).(string)
+		if !ok {
+			http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+			return
+		}
+		userID, err := uuid.Parse(userIDStr)
+		if err != nil {
+			http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+			return
+		}
+
+		webhooks, total, err := repo.ListRecent(r.Context(), limit, offset, status, search, userID)
 		if err != nil {
 			slog.Error("failed to list webhooks", "error", err)
 			http.Error(w, `{"error":"internal server error"}`, http.StatusInternalServerError)
