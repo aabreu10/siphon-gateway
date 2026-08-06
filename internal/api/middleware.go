@@ -72,7 +72,7 @@ func AuthMiddleware() func(http.Handler) http.Handler {
 			
 			if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
 				providedToken = strings.TrimPrefix(authHeader, "Bearer ")
-			} else {
+			} else if r.URL.Path == "/api/v1/events" {
 				providedToken = r.URL.Query().Get("api_key")
 			}
 
@@ -82,6 +82,9 @@ func AuthMiddleware() func(http.Handler) http.Handler {
 			}
 
 			token, err := jwt.Parse(providedToken, func(token *jwt.Token) (interface{}, error) {
+				if token.Method.Alg() != jwt.SigningMethodHS256.Alg() {
+					return nil, jwt.ErrSignatureInvalid
+				}
 				return jwtSecret, nil // using jwtSecret from auth_handler.go
 			})
 
@@ -92,6 +95,10 @@ func AuthMiddleware() func(http.Handler) http.Handler {
 
 			claims, ok := token.Claims.(jwt.MapClaims)
 			if !ok {
+				http.Error(w, `{"error":"forbidden"}`, http.StatusForbidden)
+				return
+			}
+			if _, ok := claims["exp"]; !ok {
 				http.Error(w, `{"error":"forbidden"}`, http.StatusForbidden)
 				return
 			}
