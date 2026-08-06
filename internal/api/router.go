@@ -24,7 +24,7 @@ func NewRouter(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.Hub, 
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Content-Type", "X-Webhook-Source"},
+		AllowedHeaders:   []string{"Accept", "Content-Type", "Authorization", "X-Webhook-Source"},
 		AllowCredentials: false,
 		MaxAge:           300,
 	}))
