@@ -18,6 +18,8 @@ type Config struct {
 	RabbitMQURL       string
 	TargetURL         string
 	WorkerConcurrency int
+	AdminAPIKey       string
+	IngestAPIKey      string
 }
 
 // reads env vars with defaults
@@ -36,6 +38,8 @@ func Load() *Config {
 		RabbitMQURL:       getEnv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/"),
 		TargetURL:         getEnv("TARGET_URL", fmt.Sprintf("http://localhost:%s/api/v1/echo", port)),
 		WorkerConcurrency: getEnvInt("WORKER_CONCURRENCY", 5),
+		AdminAPIKey:       getEnv("ADMIN_API_KEY", ""),
+		IngestAPIKey:      getEnv("INGEST_API_KEY", ""),
 	}
 }
 

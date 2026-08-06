@@ -15,6 +15,10 @@
 	let sseConnected = $state(false);
 	let totalCount = $state(0);
 
+	// Filtering
+	let searchQuery = $state('');
+	let statusFilter = $state('ALL');
+
 	// Computed stats
 	let stats = $derived({
 		total: totalCount,
@@ -22,6 +26,14 @@
 		pending: webhooks.filter((w) => w.status === 'PENDING').length,
 		failed: webhooks.filter((w) => w.status === 'FAILED_DLQ').length
 	});
+
+	let filteredWebhooks = $derived(
+		webhooks.filter((w) => {
+			const matchesStatus = statusFilter === 'ALL' || w.status === statusFilter;
+			const matchesSearch = w.source.toLowerCase().includes(searchQuery.toLowerCase()) || w.id.includes(searchQuery);
+			return matchesStatus && matchesSearch;
+		})
+	);
 
 	onMount(() => {
 		// Initial load (fire-and-forget — no cleanup needed)
@@ -157,12 +169,21 @@
 					⚡ Test Webhook
 				</button>
 			</div>
+			<div class="header-filters">
+				<input type="text" class="search-input" placeholder="Search ID or Source..." bind:value={searchQuery} />
+				<select class="status-select" bind:value={statusFilter}>
+					<option value="ALL">All Statuses</option>
+					<option value="SUCCESS">Success</option>
+					<option value="PENDING">Pending</option>
+					<option value="FAILED_DLQ">Failed DLQ</option>
+				</select>
+			</div>
 			<div class="sse-indicator" class:connected={sseConnected}>
 				<span class="sse-dot"></span>
 				<span class="sse-label">{sseConnected ? 'Live' : 'Reconnecting…'}</span>
 			</div>
 		</div>
-		<WebhookTable {webhooks} oninspect={(w) => (inspecting = w)} />
+		<WebhookTable webhooks={filteredWebhooks} oninspect={(w) => (inspecting = w)} />
 	</section>
 </div>
 
@@ -370,5 +391,32 @@
 
 	.sse-indicator.connected .sse-label {
 		color: var(--color-success);
+	}
+
+	.header-filters {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		margin-left: auto;
+		margin-right: 16px;
+	}
+
+	.search-input, .status-select {
+		background: rgba(255,255,255,0.05);
+		border: 1px solid var(--color-border);
+		color: var(--color-text-primary);
+		padding: 6px 12px;
+		border-radius: var(--radius-md);
+		font-size: 0.8rem;
+		outline: none;
+		transition: border-color var(--transition-fast);
+	}
+
+	.search-input:focus, .status-select:focus {
+		border-color: var(--color-accent);
+	}
+
+	.search-input {
+		width: 200px;
 	}
 </style>

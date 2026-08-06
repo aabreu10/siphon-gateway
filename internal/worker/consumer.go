@@ -3,8 +3,12 @@ package worker
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"time"
@@ -88,7 +92,12 @@ func processDelivery(ctx context.Context, logger *slog.Logger, d amqp.Delivery, 
 	)
 
 	// attempt delivery
-	statusCode, err := deliver(msg.Payload, msg.TargetURL)
+	statusCode, responseBody, err := deliver(msg.Payload, msg.TargetURL)
+
+	// save delivery log
+	if dbErr := repo.InsertDeliveryLog(ctx, msg.WebhookID, msg.RetryCount+1, statusCode, responseBody); dbErr != nil {
+		logger.Error("failed to insert delivery log", "error", dbErr)
+	}
 
 	if err == nil && statusCode >= 200 && statusCode < 300 {
 		// success
@@ -144,21 +153,41 @@ func processDelivery(ctx context.Context, logger *slog.Logger, d amqp.Delivery, 
 	_ = d.Ack(false)
 }
 
-// posts the payload to the target url, returns status code
-func deliver(payload map[string]interface{}, targetURL string) (int, error) {
+// posts the payload to the target url, returns status code and response body
+func deliver(payload map[string]interface{}, targetURL string) (int, string, error) {
 	body, err := json.Marshal(payload)
 	if err != nil {
-		return 0, fmt.Errorf("marshal payload: %w", err)
+		return 0, "", fmt.Errorf("marshal payload: %w", err)
 	}
 
-	client := &http.Client{Timeout: deliveryTimout}
-	resp, err := client.Post(targetURL, "application/json", bytes.NewReader(body))
+	// Calculate HMAC signature (using a default secret for now)
+	h := hmac.New(sha256.New, []byte("siphon_secret"))
+	h.Write(body)
+	signature := hex.EncodeToString(h.Sum(nil))
+
+	req, err := http.NewRequest("POST", targetURL, bytes.NewReader(body))
 	if err != nil {
-		return 0, fmt.Errorf("HTTP POST to %s: %w", targetURL, err)
+		return 0, "", fmt.Errorf("create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Siphon-Signature", signature)
+
+	client := &http.Client{Timeout: deliveryTimout}
+	resp, err := client.Do(req)
+	if err != nil {
+		return 0, err.Error(), fmt.Errorf("HTTP POST to %s: %w", targetURL, err)
 	}
 	defer resp.Body.Close()
 
-	return resp.StatusCode, nil
+	respBodyBytes, _ := io.ReadAll(resp.Body)
+	respBody := string(respBodyBytes)
+
+	// truncate long responses to avoid filling up the DB
+	if len(respBody) > 2000 {
+		respBody = respBody[:2000] + "... (truncated)"
+	}
+
+	return resp.StatusCode, respBody, nil
 }
 
 // builds a webhook map for sse events

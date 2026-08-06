@@ -14,6 +14,12 @@ export async function replayWebhook(id: string): Promise<{ id: string; status: s
 	return res.json();
 }
 
+export async function fetchDeliveryLogs(id: string): Promise<any[]> {
+	const res = await fetch(`${API_BASE}/api/v1/webhook/${id}/logs`);
+	if (!res.ok) throw new Error(`Failed to fetch logs: ${res.status}`);
+	return res.json();
+}
+
 export async function sendWebhook(
 	source: string,
 	payload: unknown,

@@ -20,6 +20,16 @@ type Webhook struct {
 	UpdatedAt  time.Time              `json:"updated_at"`
 }
 
+// a row in the delivery_logs table
+type DeliveryLog struct {
+	ID            uuid.UUID `json:"id"`
+	WebhookID     uuid.UUID `json:"webhook_id"`
+	AttemptNumber int       `json:"attempt_number"`
+	StatusCode    int       `json:"status_code"`
+	ResponseBody  string    `json:"response_body"`
+	CreatedAt     time.Time `json:"created_at"`
+}
+
 // crud operations for webhooks
 type WebhookRepo struct {
 	pool *pgxpool.Pool
@@ -90,4 +100,88 @@ func (r *WebhookRepo) ListRecent(ctx context.Context, limit, offset int) ([]Webh
 	}
 
 	return webhooks, total, rows.Err()
+}
+
+// inserts a delivery log for a webhook attempt
+func (r *WebhookRepo) InsertDeliveryLog(ctx context.Context, webhookID uuid.UUID, attempt, statusCode int, responseBody string) error {
+	_, err := r.pool.Exec(ctx,
+		`INSERT INTO delivery_logs (webhook_id, attempt_number, status_code, response_body, created_at)
+		 VALUES ($1, $2, $3, $4, NOW())`,
+		webhookID, attempt, statusCode, responseBody,
+	)
+	return err
+}
+
+// fetches all delivery logs for a specific webhook
+func (r *WebhookRepo) GetDeliveryLogs(ctx context.Context, webhookID uuid.UUID) ([]DeliveryLog, error) {
+	rows, err := r.pool.Query(ctx,
+		`SELECT id, webhook_id, attempt_number, status_code, response_body, created_at
+		 FROM delivery_logs WHERE webhook_id = $1 ORDER BY attempt_number ASC`, webhookID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var logs []DeliveryLog
+	for rows.Next() {
+		var l DeliveryLog
+		if err := rows.Scan(&l.ID, &l.WebhookID, &l.AttemptNumber, &l.StatusCode, &l.ResponseBody, &l.CreatedAt); err != nil {
+			return nil, err
+		}
+		logs = append(logs, l)
+	}
+
+	return logs, rows.Err()
+}
+
+// a row in the endpoints table
+type Endpoint struct {
+	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	TargetURL string    `json:"target_url"`
+	SecretKey string    `json:"secret_key"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// creates a new endpoint
+func (r *WebhookRepo) CreateEndpoint(ctx context.Context, name, targetURL, secretKey string) (uuid.UUID, error) {
+	id := uuid.New()
+	_, err := r.pool.Exec(ctx,
+		`INSERT INTO endpoints (id, name, target_url, secret_key, created_at)
+		 VALUES ($1, $2, $3, $4, NOW())`,
+		id, name, targetURL, secretKey,
+	)
+	return id, err
+}
+
+// fetches an endpoint by ID
+func (r *WebhookRepo) GetEndpoint(ctx context.Context, id uuid.UUID) (*Endpoint, error) {
+	e := &Endpoint{}
+	err := r.pool.QueryRow(ctx,
+		`SELECT id, name, target_url, secret_key, created_at FROM endpoints WHERE id = $1`, id,
+	).Scan(&e.ID, &e.Name, &e.TargetURL, &e.SecretKey, &e.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return e, nil
+}
+
+// lists all endpoints
+func (r *WebhookRepo) ListEndpoints(ctx context.Context) ([]Endpoint, error) {
+	rows, err := r.pool.Query(ctx, `SELECT id, name, target_url, secret_key, created_at FROM endpoints ORDER BY created_at DESC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var endpoints []Endpoint
+	for rows.Next() {
+		var e Endpoint
+		if err := rows.Scan(&e.ID, &e.Name, &e.TargetURL, &e.SecretKey, &e.CreatedAt); err != nil {
+			return nil, err
+		}
+		endpoints = append(endpoints, e)
+	}
+	return endpoints, rows.Err()
 }

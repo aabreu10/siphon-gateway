@@ -77,7 +77,7 @@ func main() {
 	}
 
 	// ── http server ─────────────────────────────────────────────────────
-	router := api.NewRouter(repo, pub, hub, cfg.TargetURL)
+	router := api.NewRouter(repo, pub, hub, cfg)
 
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%s", cfg.ServerPort),

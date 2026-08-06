@@ -96,6 +96,51 @@
 			<div class="sse-node svelte-node">SvelteKit UI</div>
 		</div>
 	</SpotlightCard>
+
+	<!-- Card 5: Extreme Visibility & Delivery Logs -->
+	<SpotlightCard class="bento-card glass-panel hover-glow">
+		<div class="card-header">
+			<span class="card-badge badge-blue">Transparency</span>
+			<div class="card-icon">
+				<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+					<polyline points="14 2 14 8 20 8"></polyline>
+					<line x1="16" y1="13" x2="8" y2="13"></line>
+					<line x1="16" y1="17" x2="8" y2="17"></line>
+					<polyline points="10 9 9 9 8 9"></polyline>
+				</svg>
+			</div>
+		</div>
+		<h3 class="card-title">Delivery Logs</h3>
+		<p class="card-desc">
+			Stop guessing why a webhook failed. We store the exact HTTP response body, status code, and timestamp for every single delivery attempt so you can debug downstream errors instantly.
+		</p>
+		<div class="log-visual">
+			<div class="log-line">HTTP 500</div>
+			<div class="log-line">"error": "database lock"</div>
+		</div>
+	</SpotlightCard>
+
+	<!-- Card 6: Enterprise Security -->
+	<SpotlightCard class="bento-card glass-panel hover-glow">
+		<div class="card-header">
+			<span class="card-badge badge-gray">Security</span>
+			<div class="card-icon">
+				<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+					<path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+				</svg>
+			</div>
+		</div>
+		<h3 class="card-title">HMAC Signatures & Auth</h3>
+		<p class="card-desc">
+			Downstream servers can cryptographically verify payloads using SHA-256 HMAC signatures to prevent spoofing. The ingest API is protected by rate limiters and API keys.
+		</p>
+		<div class="hmac-visual">
+			<span class="header-name">X-Siphon-Signature:</span>
+			<span class="header-value">e3b0c44298fc1c14...</span>
+		</div>
+	</SpotlightCard>
 </div>
 
 <style>
@@ -189,6 +234,18 @@
 		background: var(--color-success-glow);
 		color: var(--color-success);
 		border: 1px solid rgba(0, 230, 118, 0.2);
+	}
+
+	.badge-blue {
+		background: rgba(9, 132, 227, 0.1);
+		color: #0984e3;
+		border: 1px solid rgba(9, 132, 227, 0.2);
+	}
+
+	.badge-gray {
+		background: rgba(178, 190, 195, 0.1);
+		color: #b2bec3;
+		border: 1px solid rgba(178, 190, 195, 0.2);
 	}
 
 	.card-icon {
@@ -348,6 +405,52 @@
 		font-family: var(--font-mono);
 		font-size: 0.7rem;
 		color: var(--color-text-muted);
+		white-space: nowrap;
+	}
+
+	/* Log Visual */
+	.log-visual {
+		margin-top: auto;
+		padding-top: 14px;
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+
+	.log-line {
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		color: var(--color-danger);
+		background: var(--color-danger-glow);
+		padding: 4px 8px;
+		border-radius: var(--radius-sm);
+		border: 1px solid rgba(255, 82, 82, 0.2);
+	}
+
+	/* HMAC Visual */
+	.hmac-visual {
+		margin-top: auto;
+		padding-top: 14px;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		background: rgba(255, 255, 255, 0.05);
+		padding: 8px 12px;
+		border-radius: var(--radius-sm);
+		border: 1px solid var(--color-border);
+	}
+
+	.header-name {
+		color: var(--color-accent);
+		font-weight: 600;
+	}
+
+	.header-value {
+		color: var(--color-text-secondary);
+		overflow: hidden;
+		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 </style>
