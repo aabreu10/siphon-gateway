@@ -34,6 +34,7 @@ func NewRouter(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.Hub, 
 	// api v1
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/webhook", ingestHandler(repo, pub, hub, targetURL))
+		r.Post("/ingest", ingestHandler(repo, pub, hub, targetURL))
 		r.Post("/echo", echoHandler())
 		r.Get("/webhooks", listHandler(repo))
 		r.Get("/events", sseHandler(hub))
