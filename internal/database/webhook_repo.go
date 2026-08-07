@@ -76,12 +76,18 @@ func (r *WebhookRepo) GetUserByEmail(ctx context.Context, email string) (*User, 
 }
 
 // inserts a webhook and returns its id
-func (r *WebhookRepo) Insert(ctx context.Context, source string, payload map[string]interface{}, targetURL string, endpointID uuid.UUID) (uuid.UUID, error) {
+func (r *WebhookRepo) Insert(ctx context.Context, source string, payload map[string]interface{}, targetURL string, endpointID *uuid.UUID) (uuid.UUID, error) {
 	id := uuid.New()
+	
+	var epID interface{} = nil
+	if endpointID != nil && *endpointID != uuid.Nil {
+		epID = *endpointID
+	}
+
 	_, err := r.pool.Exec(ctx,
 		`INSERT INTO webhooks (id, source, payload, target_url, endpoint_id, status, retry_count, created_at, updated_at)
 		 VALUES ($1, $2, $3, $4, $5, 'PENDING', 0, NOW(), NOW())`,
-		id, source, payload, targetURL, endpointID,
+		id, source, payload, targetURL, epID,
 	)
 	return id, err
 }

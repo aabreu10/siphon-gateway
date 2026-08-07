@@ -85,7 +85,7 @@ func ingestHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.H
 		}
 
 		// save to db
-		id, err := repo.Insert(r.Context(), source, payload, targetURL, endpointID)
+		id, err := repo.Insert(r.Context(), source, payload, targetURL, &endpointID)
 		if err != nil {
 			slog.Error("failed to insert webhook", "error", err)
 			http.Error(w, `{"error":"internal server error"}`, http.StatusInternalServerError)
