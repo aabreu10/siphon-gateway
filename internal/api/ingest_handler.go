@@ -19,11 +19,20 @@ const maxPayloadSize = 1 << 20 // 1 MB
 // handles POST /api/v1/ingest/{endpoint_id} — validates, persists, publishes, returns id
 func ingestHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.Hub) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		endpointIDStr := chi.URLParam(r, "endpoint_id")
-		endpointID, err := uuid.Parse(endpointIDStr)
-		if err != nil {
-			http.Error(w, `{"error":"invalid endpoint_id"}`, http.StatusBadRequest)
-			return
+		param := chi.URLParam(r, "*")
+
+		var endpointID uuid.UUID
+		var targetURL string
+		var secretKey string
+
+		if param != "" {
+			// Try to parse the wildcard parameter as a UUID
+			if id, err := uuid.Parse(param); err == nil {
+				endpointID = id
+			} else {
+				// It's not a UUID, so treat it as a direct target URL (Simulator mode)
+				targetURL = param
+			}
 		}
 
 		// check content-type
@@ -58,15 +67,25 @@ func ingestHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.H
 			source = "unknown"
 		}
 
-		endpoint, err := repo.GetEndpointForIngest(r.Context(), endpointID)
-		if err != nil {
-			slog.Error("endpoint not found", "error", err, "endpoint_id", endpointID)
-			http.Error(w, `{"error":"endpoint not found"}`, http.StatusNotFound)
-			return
+		if endpointID != uuid.Nil {
+			// Real endpoint mode
+			endpoint, err := repo.GetEndpointForIngest(r.Context(), endpointID)
+			if err != nil {
+				slog.Error("endpoint not found", "error", err, "endpoint_id", endpointID)
+				http.Error(w, `{"error":"endpoint not found"}`, http.StatusNotFound)
+				return
+			}
+			targetURL = endpoint.TargetURL
+			secretKey = endpoint.SecretKey
+		} else {
+			// Simulator mode
+			if targetURL == "" {
+				targetURL = r.URL.Query().Get("target_url")
+			}
 		}
 
 		// save to db
-		id, err := repo.Insert(r.Context(), source, payload, endpoint.TargetURL, endpointID)
+		id, err := repo.Insert(r.Context(), source, payload, targetURL, endpointID)
 		if err != nil {
 			slog.Error("failed to insert webhook", "error", err)
 			http.Error(w, `{"error":"internal server error"}`, http.StatusInternalServerError)
@@ -78,8 +97,8 @@ func ingestHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.H
 			WebhookID:  id,
 			EndpointID: endpointID,
 			Payload:    payload,
-			TargetURL:  endpoint.TargetURL,
-			SecretKey:  endpoint.SecretKey,
+			TargetURL:  targetURL,
+			SecretKey:  secretKey,
 			RetryCount: 0,
 			Source:     source,
 		}
@@ -96,7 +115,7 @@ func ingestHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.H
 				"id":          id,
 				"source":      source,
 				"payload":     payload,
-				"target_url":  endpoint.TargetURL,
+				"target_url":  targetURL,
 				"status":      "PENDING",
 				"retry_count": 0,
 			},

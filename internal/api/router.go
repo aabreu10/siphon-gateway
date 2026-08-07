@@ -35,20 +35,24 @@ func NewRouter(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.Hub, 
 
 	// api v1
 	r.Route("/api/v1", func(r chi.Router) {
-		// ingest route (protected by INGEST_API_KEY + Rate Limiter)
+		// ingest routes (protected by INGEST_API_KEY + Rate Limiter)
 		r.Group(func(r chi.Router) {
 			r.Use(IngestAuthMiddleware(cfg.IngestAPIKey))
 			r.Use(RateLimitMiddleware(NewIPRateLimiter(rate.Limit(50), 100))) // 50 rps
-			r.Post("/ingest/{endpoint_id}", ingestHandler(repo, pub, hub))
+
+			// Support all routing variants: UUID endpoints, target URLs in path, and empty paths
+			r.Post("/webhook", ingestHandler(repo, pub, hub))
+			r.Post("/ingest", ingestHandler(repo, pub, hub))
+			r.Post("/ingest/*", ingestHandler(repo, pub, hub))
 		})
-		
+
 		// echo route
 		r.Post("/echo", echoHandler())
-		
+
 		// auth routes
 		r.Post("/auth/signup", signupHandler(repo))
 		r.Post("/auth/login", loginHandler(repo))
-		
+
 		// dashboard admin routes (protected by JWT)
 		r.Group(func(r chi.Router) {
 			r.Use(AuthMiddleware())
