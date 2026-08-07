@@ -68,7 +68,7 @@ func ingestHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.H
 		}
 
 		if endpointID != uuid.Nil {
-			// Real endpoint mode
+			// real endpoint mode
 			endpoint, err := repo.GetEndpointForIngest(r.Context(), endpointID)
 			if err != nil {
 				slog.Error("endpoint not found", "error", err, "endpoint_id", endpointID)
@@ -78,7 +78,7 @@ func ingestHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.H
 			targetURL = endpoint.TargetURL
 			secretKey = endpoint.SecretKey
 		} else {
-			// Simulator mode
+			// simulator mode
 			if targetURL == "" {
 				targetURL = r.URL.Query().Get("target_url")
 			}

@@ -78,7 +78,7 @@ func (r *WebhookRepo) GetUserByEmail(ctx context.Context, email string) (*User, 
 // inserts a webhook and returns its id
 func (r *WebhookRepo) Insert(ctx context.Context, source string, payload map[string]interface{}, targetURL string, endpointID *uuid.UUID) (uuid.UUID, error) {
 	id := uuid.New()
-	
+
 	var epID interface{} = nil
 	if endpointID != nil && *endpointID != uuid.Nil {
 		epID = *endpointID
@@ -117,7 +117,7 @@ func (r *WebhookRepo) GetByID(ctx context.Context, id uuid.UUID) (*Webhook, erro
 // returns recent webhooks with pagination, status filter, and search
 func (r *WebhookRepo) ListRecent(ctx context.Context, limit, offset int, status string, search string, userID uuid.UUID) ([]Webhook, int, error) {
 	var total int
-	
+
 	countQuery := `
 		SELECT COUNT(*) FROM webhooks w
 		JOIN endpoints e ON w.endpoint_id = e.id
