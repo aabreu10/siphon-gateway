@@ -31,6 +31,11 @@ func replayHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.H
 			return
 		}
 
+		if webhook.Status != "FAILED_DLQ" {
+			http.Error(w, `{"error":"webhook is not eligible for replay"}`, http.StatusConflict)
+			return
+		}
+
 		// reset status
 		if err := repo.UpdateStatus(r.Context(), id, "PENDING", 0); err != nil {
 			slog.Error("failed to reset webhook status", "error", err, "webhook_id", id)

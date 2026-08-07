@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,14 +15,17 @@ import (
 // payload for rabbitmq messages
 type Message struct {
 	WebhookID  uuid.UUID              `json:"webhook_id"`
+	EndpointID uuid.UUID              `json:"endpoint_id"`
 	Payload    map[string]interface{} `json:"payload"`
 	TargetURL  string                 `json:"target_url"`
+	SecretKey  string                 `json:"secret_key"`
 	RetryCount int                    `json:"retry_count"`
 	Source     string                 `json:"source"`
 }
 
 // wraps an amqp channel for publishing
 type Publisher struct {
+	mu sync.Mutex
 	ch *amqp.Channel
 }
 

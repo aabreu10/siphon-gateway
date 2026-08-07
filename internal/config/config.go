@@ -18,12 +18,17 @@ type Config struct {
 	RabbitMQURL       string
 	TargetURL         string
 	WorkerConcurrency int
+	AdminAPIKey       string
+	IngestAPIKey      string
 }
 
 // reads env vars with defaults
 func Load() *Config {
+	// render sets PORT, docker-compose uses SERVER_PORT
+	port := getEnv("PORT", getEnv("SERVER_PORT", "8080"))
+
 	return &Config{
-		ServerPort:        getEnv("SERVER_PORT", "8080"),
+		ServerPort:        port,
 		DatabaseURL:       getEnv("DATABASE_URL", ""),
 		PostgresHost:      getEnv("POSTGRES_HOST", "localhost"),
 		PostgresPort:      getEnv("POSTGRES_PORT", "5432"),
@@ -31,8 +36,10 @@ func Load() *Config {
 		PostgresPassword:  getEnv("POSTGRES_PASSWORD", "siphon_secret"),
 		PostgresDB:        getEnv("POSTGRES_DB", "siphon_gateway"),
 		RabbitMQURL:       getEnv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/"),
-		TargetURL:         getEnv("TARGET_URL", "http://localhost:9999/webhook"),
+		TargetURL:         getEnv("TARGET_URL", fmt.Sprintf("http://localhost:%s/api/v1/echo", port)),
 		WorkerConcurrency: getEnvInt("WORKER_CONCURRENCY", 5),
+		AdminAPIKey:       getEnv("ADMIN_API_KEY", ""),
+		IngestAPIKey:      getEnv("INGEST_API_KEY", ""),
 	}
 }
 

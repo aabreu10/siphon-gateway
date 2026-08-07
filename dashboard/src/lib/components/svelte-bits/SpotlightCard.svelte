@@ -46,7 +46,7 @@
 <div
 	bind:this={divRef}
 	role="group"
-	tabindex="0"
+	tabindex="-1"
 	onmousemove={handleMouseMove}
 	onfocus={handleFocus}
 	onblur={handleBlur}
