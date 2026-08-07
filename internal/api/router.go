@@ -17,6 +17,7 @@ func NewRouter(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.Hub, 
 	// middleware
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
+	r.Use(middleware.CleanPath)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
