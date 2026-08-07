@@ -68,7 +68,7 @@ func ingestHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.H
 		}
 
 		if endpointID != uuid.Nil {
-			// Real endpoint mode
+			// real endpoint mode
 			endpoint, err := repo.GetEndpointForIngest(r.Context(), endpointID)
 			if err != nil {
 				slog.Error("endpoint not found", "error", err, "endpoint_id", endpointID)
@@ -78,14 +78,14 @@ func ingestHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.H
 			targetURL = endpoint.TargetURL
 			secretKey = endpoint.SecretKey
 		} else {
-			// Simulator mode
+			// simulator mode
 			if targetURL == "" {
 				targetURL = r.URL.Query().Get("target_url")
 			}
 		}
 
 		// save to db
-		id, err := repo.Insert(r.Context(), source, payload, targetURL, endpointID)
+		id, err := repo.Insert(r.Context(), source, payload, targetURL, &endpointID)
 		if err != nil {
 			slog.Error("failed to insert webhook", "error", err)
 			http.Error(w, `{"error":"internal server error"}`, http.StatusInternalServerError)
