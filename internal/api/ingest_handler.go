@@ -20,7 +20,7 @@ const maxPayloadSize = 1 << 20 // 1 MB
 func ingestHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.Hub) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		param := chi.URLParam(r, "*")
-		
+
 		var endpointID uuid.UUID
 		var targetURL string
 		var secretKey string
