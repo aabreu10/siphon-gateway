@@ -120,8 +120,8 @@ func (r *WebhookRepo) ListRecent(ctx context.Context, limit, offset int, status 
 
 	countQuery := `
 		SELECT COUNT(*) FROM webhooks w
-		JOIN endpoints e ON w.endpoint_id = e.id
-		WHERE e.user_id = $1
+		LEFT JOIN endpoints e ON w.endpoint_id = e.id
+		WHERE (e.user_id = $1 OR w.endpoint_id IS NULL)
 		AND ($2 = '' OR w.status = $2) 
 		AND ($3 = '' OR w.source ILIKE '%' || $3 || '%' OR w.id::text ILIKE '%' || $3 || '%')`
 	err := r.pool.QueryRow(ctx, countQuery, userID, status, search).Scan(&total)
@@ -132,8 +132,8 @@ func (r *WebhookRepo) ListRecent(ctx context.Context, limit, offset int, status 
 	query := `
 		SELECT w.id, w.source, w.payload, w.target_url, w.status, w.retry_count, w.created_at, w.updated_at
 		FROM webhooks w
-		JOIN endpoints e ON w.endpoint_id = e.id
-		WHERE e.user_id = $1
+		LEFT JOIN endpoints e ON w.endpoint_id = e.id
+		WHERE (e.user_id = $1 OR w.endpoint_id IS NULL)
 		AND ($2 = '' OR w.status = $2) 
 		AND ($3 = '' OR w.source ILIKE '%' || $3 || '%' OR w.id::text ILIKE '%' || $3 || '%')
 		ORDER BY w.created_at DESC
