@@ -68,7 +68,17 @@ export async function sendWebhook(
 	payload: unknown,
 	endpointId: string
 ): Promise<{ id: string; status: string }> {
-	const res = await fetch(`${API_BASE}/api/v1/ingest/${endpointId}`, {
+	let url = `${API_BASE}/api/v1/ingest`;
+	if (endpointId) {
+		const isUUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(endpointId);
+		if (isUUID) {
+			url += `/${endpointId}`;
+		} else {
+			url += `?target_url=${encodeURIComponent(endpointId)}`;
+		}
+	}
+
+	const res = await fetch(url, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
