@@ -32,6 +32,7 @@ func NewRouter(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.Hub, 
 
 	// health
 	r.Get("/health", healthHandler())
+	r.Head("/health", healthHandler())
 
 	// api v1
 	r.Route("/api/v1", func(r chi.Router) {
