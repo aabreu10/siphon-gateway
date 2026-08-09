@@ -68,5 +68,7 @@ func (p *Publisher) publish(ctx context.Context, exchange, routingKey string, ms
 		pub.Expiration = expiration
 	}
 
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	return p.ch.PublishWithContext(ctx, exchange, routingKey, false, false, pub)
 }
