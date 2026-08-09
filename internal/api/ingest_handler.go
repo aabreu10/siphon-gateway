@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/aabreu10/siphon-gateway/internal/broker"
+	"github.com/aabreu10/siphon-gateway/internal/config"
 	"github.com/aabreu10/siphon-gateway/internal/database"
 	"github.com/aabreu10/siphon-gateway/internal/sse"
 	"github.com/go-chi/chi/v5"
@@ -17,7 +18,7 @@ import (
 const maxPayloadSize = 1 << 20 // 1 MB
 
 // handles POST /api/v1/ingest/{endpoint_id} — validates, persists, publishes, returns id
-func ingestHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.Hub) http.HandlerFunc {
+func ingestHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.Hub, cfg *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		param := chi.URLParam(r, "*")
 
@@ -81,6 +82,9 @@ func ingestHandler(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.H
 			// simulator mode
 			if targetURL == "" {
 				targetURL = r.URL.Query().Get("target_url")
+			}
+			if targetURL == "" {
+				targetURL = cfg.TargetURL
 			}
 		}
 

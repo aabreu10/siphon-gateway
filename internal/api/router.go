@@ -42,9 +42,9 @@ func NewRouter(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.Hub, 
 			r.Use(RateLimitMiddleware(NewIPRateLimiter(rate.Limit(50), 100))) // 50 rps
 
 			// Support all routing variants: UUID endpoints, target URLs in path, and empty paths
-			r.Post("/webhook", ingestHandler(repo, pub, hub))
-			r.Post("/ingest", ingestHandler(repo, pub, hub))
-			r.Post("/ingest/*", ingestHandler(repo, pub, hub))
+			r.Post("/webhook", ingestHandler(repo, pub, hub, cfg))
+			r.Post("/ingest", ingestHandler(repo, pub, hub, cfg))
+			r.Post("/ingest/*", ingestHandler(repo, pub, hub, cfg))
 		})
 
 		// echo route
