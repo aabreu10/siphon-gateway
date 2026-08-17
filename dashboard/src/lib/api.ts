@@ -3,10 +3,10 @@ import type { WebhookListResponse } from './types';
 const API_BASE = (import.meta.env.VITE_API_URL ?? 'http://localhost:8080').replace(/\/+$/, '');
 
 export function getAuthHeaders(): Record<string, string> {
-	if (typeof localStorage === 'undefined') return {};
-	const apiKey = localStorage.getItem('siphon_jwt_token');
-	if (!apiKey) return {};
-	return { Authorization: `Bearer ${apiKey}` };
+	// We no longer read from localStorage for the API requests;
+	// authentication is handled via HttpOnly cookies (credentials: 'include').
+	// We return empty headers or fallback logic if needed.
+	return {};
 }
 
 export async function fetchWebhooks(limit = 100, offset = 0, status = 'ALL', search = ''): Promise<WebhookListResponse> {
@@ -17,7 +17,8 @@ export async function fetchWebhooks(limit = 100, offset = 0, status = 'ALL', sea
 		search: search
 	});
 	const res = await fetch(`${API_BASE}/api/v1/webhooks?${params.toString()}`, {
-		headers: getAuthHeaders()
+		headers: getAuthHeaders(),
+		credentials: 'include'
 	});
 	if (res.status === 401) throw new Error('Unauthorized');
 	if (!res.ok) throw new Error(`Failed to fetch webhooks: ${res.status}`);
@@ -27,7 +28,8 @@ export async function fetchWebhooks(limit = 100, offset = 0, status = 'ALL', sea
 export async function replayWebhook(id: string): Promise<{ id: string; status: string }> {
 	const res = await fetch(`${API_BASE}/api/v1/webhook/${id}/replay`, { 
 		method: 'POST',
-		headers: getAuthHeaders()
+		headers: getAuthHeaders(),
+		credentials: 'include'
 	});
 	if (!res.ok) throw new Error(`Failed to replay webhook: ${res.status}`);
 	return res.json();
@@ -35,7 +37,8 @@ export async function replayWebhook(id: string): Promise<{ id: string; status: s
 
 export async function fetchDeliveryLogs(id: string): Promise<any[]> {
 	const res = await fetch(`${API_BASE}/api/v1/webhook/${id}/logs`, {
-		headers: getAuthHeaders()
+		headers: getAuthHeaders(),
+		credentials: 'include'
 	});
 	if (!res.ok) throw new Error(`Failed to fetch logs: ${res.status}`);
 	return res.json();
@@ -44,7 +47,8 @@ export async function fetchDeliveryLogs(id: string): Promise<any[]> {
 // Endpoints CRUD
 export async function fetchEndpoints(): Promise<any[]> {
 	const res = await fetch(`${API_BASE}/api/v1/endpoints`, {
-		headers: getAuthHeaders()
+		headers: getAuthHeaders(),
+		credentials: 'include'
 	});
 	if (!res.ok) throw new Error(`Failed to fetch endpoints: ${res.status}`);
 	return res.json();
@@ -57,6 +61,7 @@ export async function createEndpoint(name: string, target_url: string, secret_ke
 			'Content-Type': 'application/json',
 			...getAuthHeaders()
 		},
+		credentials: 'include',
 		body: JSON.stringify({ name, target_url, secret_key })
 	});
 	if (!res.ok) throw new Error(`Failed to create endpoint: ${res.status}`);
@@ -83,10 +88,9 @@ export async function sendWebhook(
 		headers: {
 			'Content-Type': 'application/json',
 			'X-Webhook-Source': source,
-			// INGEST_API_KEY should ideally be used here if it's external, 
-			// but for simulator we use the admin key or a dummy
 			...getAuthHeaders()
 		},
+		credentials: 'include',
 		body: JSON.stringify(payload)
 	});
 
@@ -99,6 +103,5 @@ export async function sendWebhook(
 }
 
 export function getSSEUrl(): string {
-	const apiKey = typeof localStorage !== 'undefined' ? localStorage.getItem('siphon_jwt_token') : '';
-	return `${API_BASE}/api/v1/events?api_key=${apiKey}`;
+	return `${API_BASE}/api/v1/events`;
 }

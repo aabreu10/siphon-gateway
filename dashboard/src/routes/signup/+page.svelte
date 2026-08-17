@@ -8,10 +8,7 @@
 	let isLoading = $state(false);
 
 	onMount(() => {
-		const existingKey = localStorage.getItem('siphon_jwt_token');
-		if (existingKey) {
-			goto('/dashboard');
-		}
+		// With HttpOnly cookies, we can't check auth status synchronously here easily.
 	});
 
 	async function handleSignup() {
@@ -28,12 +25,11 @@
 			const res = await fetch(`${API_BASE}/api/v1/auth/signup`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
 				body: JSON.stringify({ email, password })
 			});
 
 			if (res.ok) {
-				const data = await res.json();
-				localStorage.setItem('siphon_jwt_token', data.token);
 				goto('/dashboard');
 			} else {
 				const errData = await res.json().catch(() => ({}));

@@ -22,11 +22,14 @@ func NewRouter(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.Hub, 
 	r.Use(middleware.CleanPath)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(HSTSMiddleware())
+	r.Use(MaxBytesMiddleware(5 * 1024 * 1024)) // 5MB limit
+	r.Use(CSRFMiddleware())
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"*"},
+		AllowedOrigins:   []string{cfg.CorsAllowedOrigin},
 		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Content-Type", "Authorization", "X-Webhook-Source"},
-		AllowCredentials: false,
+		AllowCredentials: true,
 		MaxAge:           300,
 	}))
 
@@ -51,8 +54,12 @@ func NewRouter(repo *database.WebhookRepo, pub *broker.Publisher, hub *sse.Hub, 
 		r.Post("/echo", echoHandler())
 
 		// auth routes
-		r.Post("/auth/signup", signupHandler(repo))
-		r.Post("/auth/login", loginHandler(repo))
+		r.Group(func(r chi.Router) {
+			r.Use(RateLimitMiddleware(NewIPRateLimiter(rate.Limit(1), 5))) // 1 rps, burst of 5
+			r.Post("/auth/signup", signupHandler(repo))
+			r.Post("/auth/login", loginHandler(repo))
+			r.Post("/auth/logout", logoutHandler())
+		})
 
 		// dashboard admin routes (protected by JWT)
 		r.Group(func(r chi.Router) {

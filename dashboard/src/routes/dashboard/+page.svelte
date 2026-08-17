@@ -45,17 +45,11 @@
 	});
 
 	onMount(() => {
-		const apiKey = localStorage.getItem('siphon_jwt_token');
-		if (!apiKey) {
-			goto('/login');
-			return;
-		}
-
-		// Initial load
+		// Initial load - if unauthenticated, fetchWebhooks will redirect
 		loadInitialData();
 
 		// SSE connection
-		const evtSource = new EventSource(getSSEUrl());
+		const evtSource = new EventSource(getSSEUrl(), { withCredentials: true });
 
 		evtSource.addEventListener('connected', () => {
 			sseConnected = true;
@@ -84,8 +78,11 @@
 			const data = await fetchWebhooks(200);
 			webhooks = data.webhooks;
 			totalCount = data.total;
-		} catch (err) {
+		} catch (err: any) {
 			console.error('Failed to load webhooks:', err);
+			if (err.message === 'Unauthorized') {
+				goto('/login');
+			}
 		}
 	}
 

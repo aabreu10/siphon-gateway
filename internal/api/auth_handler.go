@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/aabreu10/siphon-gateway/internal/database"
@@ -39,8 +40,10 @@ func signupHandler(repo *database.WebhookRepo) http.HandlerFunc {
 			return
 		}
 
+		req.Email = strings.TrimSpace(req.Email)
 		if req.Email == "" || req.Password == "" {
-			http.Error(w, `{"error":"email and password are required"}`, http.StatusBadRequest)
+			slog.Warn("failed signup attempt", "reason", "missing fields", "ip", r.RemoteAddr)
+			http.Error(w, `{"error":"invalid credentials"}`, http.StatusBadRequest)
 			return
 		}
 
@@ -52,7 +55,9 @@ func signupHandler(repo *database.WebhookRepo) http.HandlerFunc {
 			return
 		}
 		if existing != nil {
-			http.Error(w, `{"error":"email already registered"}`, http.StatusConflict)
+			slog.Warn("failed signup attempt", "reason", "email already registered", "ip", r.RemoteAddr)
+			// prevent enumeration: return same error as login
+			http.Error(w, `{"error":"invalid credentials"}`, http.StatusUnauthorized)
 			return
 		}
 
@@ -80,9 +85,22 @@ func signupHandler(repo *database.WebhookRepo) http.HandlerFunc {
 			return
 		}
 
+		slog.Info("successful signup", "email", req.Email, "ip", r.RemoteAddr)
+
+		isSecure := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
+		http.SetCookie(w, &http.Cookie{
+			Name:     "siphon_auth",
+			Value:    token,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   isSecure,
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   24 * 60 * 60,
+		})
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(AuthResponse{Token: token})
+		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 	}
 }
 
@@ -94,8 +112,10 @@ func loginHandler(repo *database.WebhookRepo) http.HandlerFunc {
 			return
 		}
 
+		req.Email = strings.TrimSpace(req.Email)
 		if req.Email == "" || req.Password == "" {
-			http.Error(w, `{"error":"email and password are required"}`, http.StatusBadRequest)
+			slog.Warn("failed login attempt", "reason", "missing fields", "ip", r.RemoteAddr)
+			http.Error(w, `{"error":"invalid credentials"}`, http.StatusBadRequest)
 			return
 		}
 
@@ -107,12 +127,14 @@ func loginHandler(repo *database.WebhookRepo) http.HandlerFunc {
 			return
 		}
 		if user == nil {
+			slog.Warn("failed login attempt", "reason", "user not found", "ip", r.RemoteAddr)
 			http.Error(w, `{"error":"invalid credentials"}`, http.StatusUnauthorized)
 			return
 		}
 
 		// verify password
 		if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
+			slog.Warn("failed login attempt", "reason", "incorrect password", "ip", r.RemoteAddr)
 			http.Error(w, `{"error":"invalid credentials"}`, http.StatusUnauthorized)
 			return
 		}
@@ -125,7 +147,39 @@ func loginHandler(repo *database.WebhookRepo) http.HandlerFunc {
 			return
 		}
 
+		slog.Info("successful login", "email", req.Email, "ip", r.RemoteAddr)
+
+		isSecure := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
+		http.SetCookie(w, &http.Cookie{
+			Name:     "siphon_auth",
+			Value:    token,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   isSecure,
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   24 * 60 * 60,
+		})
+
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(AuthResponse{Token: token})
+		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+	}
+}
+
+func logoutHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		isSecure := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
+		http.SetCookie(w, &http.Cookie{
+			Name:     "siphon_auth",
+			Value:    "",
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   isSecure,
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   -1,
+		})
+		slog.Info("successful logout", "ip", r.RemoteAddr)
+		
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 	}
 }
