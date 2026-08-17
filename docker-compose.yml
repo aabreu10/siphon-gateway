@@ -15,6 +15,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
 
   # ── RabbitMQ ─────────────────────────────────────────────────────────────────
   rabbitmq:
@@ -30,6 +31,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
+    restart: unless-stopped
 
   # ── Database Migrations ──────────────────────────────────────────────────────
   migrate:
