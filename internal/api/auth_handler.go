@@ -88,13 +88,18 @@ func signupHandler(repo *database.WebhookRepo) http.HandlerFunc {
 		slog.Info("successful signup", "email", req.Email, "ip", r.RemoteAddr)
 
 		isSecure := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
+		sameSite := http.SameSiteLaxMode
+		if isSecure {
+			sameSite = http.SameSiteNoneMode
+		}
+		
 		http.SetCookie(w, &http.Cookie{
 			Name:     "siphon_auth",
 			Value:    token,
 			Path:     "/",
 			HttpOnly: true,
 			Secure:   isSecure,
-			SameSite: http.SameSiteLaxMode,
+			SameSite: sameSite,
 			MaxAge:   24 * 60 * 60,
 		})
 
@@ -150,13 +155,18 @@ func loginHandler(repo *database.WebhookRepo) http.HandlerFunc {
 		slog.Info("successful login", "email", req.Email, "ip", r.RemoteAddr)
 
 		isSecure := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
+		sameSite := http.SameSiteLaxMode
+		if isSecure {
+			sameSite = http.SameSiteNoneMode
+		}
+		
 		http.SetCookie(w, &http.Cookie{
 			Name:     "siphon_auth",
 			Value:    token,
 			Path:     "/",
 			HttpOnly: true,
 			Secure:   isSecure,
-			SameSite: http.SameSiteLaxMode,
+			SameSite: sameSite,
 			MaxAge:   24 * 60 * 60,
 		})
 
@@ -168,13 +178,18 @@ func loginHandler(repo *database.WebhookRepo) http.HandlerFunc {
 func logoutHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		isSecure := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
+		sameSite := http.SameSiteLaxMode
+		if isSecure {
+			sameSite = http.SameSiteNoneMode
+		}
+
 		http.SetCookie(w, &http.Cookie{
 			Name:     "siphon_auth",
 			Value:    "",
 			Path:     "/",
 			HttpOnly: true,
 			Secure:   isSecure,
-			SameSite: http.SameSiteLaxMode,
+			SameSite: sameSite,
 			MaxAge:   -1,
 		})
 		slog.Info("successful logout", "ip", r.RemoteAddr)
