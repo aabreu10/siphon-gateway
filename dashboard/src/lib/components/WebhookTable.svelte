@@ -40,7 +40,7 @@
 	}
 </script>
 
-<div class="table-container glass-panel">
+<div class="table-container">
 	<div class="table-scroll">
 		<table id="webhook-table">
 			<thead>
@@ -142,6 +142,9 @@
 <style>
 	.table-container {
 		overflow: hidden;
+		background: var(--color-bg-card);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-xl);
 	}
 
 	.table-scroll {
@@ -190,7 +193,7 @@
 		font-size: 0.78rem;
 		font-weight: 500;
 		color: var(--color-accent);
-		background: var(--color-accent-glow);
+		background: var(--color-accent-subtle);
 		padding: 3px 8px;
 		border-radius: 4px;
 	}
@@ -262,12 +265,12 @@
 
 	.btn-replay {
 		color: var(--color-accent);
-		border-color: rgba(108, 92, 231, 0.2);
+		border-color: rgba(20, 184, 166, 0.2);
 	}
 
 	.btn-replay:hover:not(:disabled) {
-		background: var(--color-accent-glow);
-		border-color: rgba(108, 92, 231, 0.4);
+		background: var(--color-accent-subtle);
+		border-color: rgba(20, 184, 166, 0.3);
 	}
 
 	.btn-replay:disabled {

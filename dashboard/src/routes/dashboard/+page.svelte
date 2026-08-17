@@ -6,9 +6,7 @@
 	import WebhookTable from '$lib/components/WebhookTable.svelte';
 	import PayloadModal from '$lib/components/PayloadModal.svelte';
 	import WebhookTesterModal from '$lib/components/WebhookTesterModal.svelte';
-	import Balatro from '$lib/components/svelte-bits/Balatro.svelte';
 	import CountUp from '$lib/components/svelte-bits/CountUp.svelte';
-	import SpotlightCard from '$lib/components/svelte-bits/SpotlightCard.svelte';
 
 	let webhooks = $state<Webhook[]>([]);
 	let inspecting = $state<Webhook | null>(null);
@@ -118,14 +116,14 @@
 	}
 </script>
 
-<div class="dashboard">
-	<div class="dashboard-bg-wrapper">
-		<Balatro color1="#6c5ce7" color2="#1e1b4b" color3="#0a0b0f" mouseInteraction={true} />
-	</div>
+<svelte:head>
+	<title>Dashboard — Siphon Gateway</title>
+</svelte:head>
 
+<div class="dashboard">
 	<!-- Stats Cards -->
 	<section class="stats-grid" aria-label="Webhook Statistics">
-		<SpotlightCard class="stat-card glass-panel" contentClass="stat-card-inner">
+		<div class="stat-card animate-fade-in-up">
 			<div class="stat-icon stat-icon-total">
 				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
 					<path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
@@ -135,9 +133,9 @@
 				<CountUp to={stats.total} class="stat-value" />
 				<span class="stat-label">Total Webhooks</span>
 			</div>
-		</SpotlightCard>
+		</div>
 
-		<SpotlightCard class="stat-card glass-panel" contentClass="stat-card-inner">
+		<div class="stat-card animate-fade-in-up" style="animation-delay: 50ms">
 			<div class="stat-icon stat-icon-success">
 				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
 					<polyline points="20 6 9 17 4 12"></polyline>
@@ -147,9 +145,9 @@
 				<CountUp to={stats.success} class="stat-value stat-value-success" />
 				<span class="stat-label">Delivered</span>
 			</div>
-		</SpotlightCard>
+		</div>
 
-		<SpotlightCard class="stat-card glass-panel" contentClass="stat-card-inner">
+		<div class="stat-card animate-fade-in-up" style="animation-delay: 100ms">
 			<div class="stat-icon stat-icon-pending">
 				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
 					<circle cx="12" cy="12" r="10"></circle>
@@ -160,9 +158,9 @@
 				<CountUp to={stats.pending} class="stat-value stat-value-pending" />
 				<span class="stat-label">In Progress</span>
 			</div>
-		</SpotlightCard>
+		</div>
 
-		<SpotlightCard class="stat-card glass-panel" contentClass="stat-card-inner">
+		<div class="stat-card animate-fade-in-up" style="animation-delay: 150ms">
 			<div class="stat-icon stat-icon-failed">
 				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
 					<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
@@ -174,11 +172,11 @@
 				<CountUp to={stats.failed} class="stat-value stat-value-failed" />
 				<span class="stat-label">Dead Letter Queue</span>
 			</div>
-		</SpotlightCard>
+		</div>
 	</section>
 
 	<!-- Integration Details -->
-	<section class="integration-card glass-panel animate-fade-in-up" style="animation-delay: 125ms" aria-label="Integration Details">
+	<section class="integration-card animate-fade-in-up" style="animation-delay: 125ms" aria-label="Integration Details">
 		<div class="integration-content">
 			<div class="integration-text">
 				<h2 class="section-title">Integration Details</h2>
@@ -197,7 +195,7 @@
 			<div class="header-left">
 				<h2 class="section-title">Live Event Log</h2>
 				<button class="btn-test-webhook-sm" onclick={() => (showTesterModal = true)}>
-					⚡ Simulate Event
+					Simulate Event
 				</button>
 			</div>
 			<div class="header-filters">
@@ -211,7 +209,7 @@
 			</div>
 			<div class="sse-indicator" class:connected={sseConnected}>
 				<span class="sse-dot"></span>
-				<span class="sse-label">{sseConnected ? 'Live' : 'Reconnecting…'}</span>
+				<span class="sse-label">{sseConnected ? 'Live' : 'Reconnecting...'}</span>
 			</div>
 		</div>
 		<WebhookTable webhooks={filteredWebhooks} oninspect={(w) => (inspecting = w)} />
@@ -230,18 +228,9 @@
 
 <style>
 	.dashboard {
-		position: relative;
 		display: flex;
 		flex-direction: column;
 		gap: 24px;
-	}
-
-	.dashboard-bg-wrapper {
-		position: fixed;
-		inset: 0;
-		opacity: 0.25;
-		pointer-events: none;
-		z-index: -1;
 	}
 
 	/* ── Stats Grid ──────────────────────────────────────────────────── */
@@ -263,25 +252,21 @@
 		}
 	}
 
-	:global(.stat-card) {
-		animation: fadeInUp 0.4s ease both;
+	.stat-card {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: 20px;
+		padding: 24px 28px;
+		background: var(--color-bg-card);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-xl);
+		transition: border-color var(--transition-fast);
 	}
 
-	:global(.stat-card-inner) {
-		display: flex !important;
-		flex-direction: row !important;
-		align-items: center !important;
-		justify-content: flex-start !important;
-		gap: 20px !important;
-		padding: 24px 28px !important;
-		width: 100% !important;
-		box-sizing: border-box !important;
+	.stat-card:hover {
+		border-color: var(--color-border-active);
 	}
-
-	:global(.stat-card:nth-child(1)) { animation-delay: 0ms; }
-	:global(.stat-card:nth-child(2)) { animation-delay: 50ms; }
-	:global(.stat-card:nth-child(3)) { animation-delay: 100ms; }
-	:global(.stat-card:nth-child(4)) { animation-delay: 150ms; }
 
 	.stat-icon {
 		display: flex;
@@ -294,27 +279,27 @@
 	}
 
 	.stat-icon-total {
-		background: var(--color-accent-glow);
+		background: var(--color-accent-subtle);
 		color: var(--color-accent);
-		border: 1px solid rgba(108, 92, 231, 0.25);
+		border: 1px solid rgba(20, 184, 166, 0.2);
 	}
 
 	.stat-icon-success {
-		background: var(--color-success-glow);
+		background: var(--color-success-subtle);
 		color: var(--color-success);
-		border: 1px solid rgba(0, 230, 118, 0.25);
+		border: 1px solid rgba(34, 197, 94, 0.2);
 	}
 
 	.stat-icon-pending {
-		background: var(--color-warning-glow);
+		background: var(--color-warning-subtle);
 		color: var(--color-warning);
-		border: 1px solid rgba(255, 171, 64, 0.25);
+		border: 1px solid rgba(245, 158, 11, 0.2);
 	}
 
 	.stat-icon-failed {
-		background: var(--color-danger-glow);
+		background: var(--color-danger-subtle);
 		color: var(--color-danger);
-		border: 1px solid rgba(255, 82, 82, 0.25);
+		border: 1px solid rgba(239, 68, 68, 0.2);
 	}
 
 	.stat-content {
@@ -349,9 +334,9 @@
 	/* ── Integration Details ─────────────────────────────────────────── */
 	.integration-card {
 		padding: 20px 28px;
-		border-radius: var(--radius-lg);
-		border: 1px solid rgba(108, 92, 231, 0.2);
-		background: rgba(10, 11, 15, 0.6);
+		border-radius: var(--radius-xl);
+		border: 1px solid var(--color-border);
+		background: var(--color-bg-card);
 	}
 
 	.integration-content {
@@ -377,7 +362,7 @@
 		display: flex;
 		align-items: center;
 		gap: 12px;
-		background: rgba(0, 0, 0, 0.4);
+		background: var(--color-bg-elevated);
 		padding: 8px 16px;
 		border-radius: var(--radius-md);
 		border: 1px solid var(--color-border);
@@ -387,9 +372,9 @@
 		font-size: 0.7rem;
 		font-weight: 700;
 		color: var(--color-success);
-		background: var(--color-success-glow);
+		background: var(--color-success-subtle);
 		padding: 3px 8px;
-		border-radius: 4px;
+		border-radius: var(--radius-sm);
 	}
 
 	.url-code {
@@ -423,19 +408,17 @@
 		display: inline-flex;
 		align-items: center;
 		padding: 4px 12px;
-		border-radius: 20px;
+		border-radius: var(--radius-md);
 		font-size: 0.75rem;
 		font-weight: 600;
 		color: var(--color-warning);
-		background: var(--color-warning-glow);
-		border: 1px solid rgba(255, 171, 64, 0.3);
+		background: var(--color-warning-subtle);
+		border: 1px solid rgba(245, 158, 11, 0.2);
 		cursor: pointer;
 		transition: all var(--transition-fast);
 	}
 
 	.btn-test-webhook-sm:hover {
-		transform: translateY(-1px);
-		box-shadow: 0 3px 10px rgba(255, 171, 64, 0.25);
 		border-color: var(--color-warning);
 	}
 
@@ -450,14 +433,14 @@
 		align-items: center;
 		gap: 6px;
 		padding: 4px 12px;
-		border-radius: 20px;
+		border-radius: var(--radius-md);
 		border: 1px solid var(--color-border);
-		background: rgba(255, 255, 255, 0.02);
+		background: transparent;
 	}
 
 	.sse-indicator.connected {
-		border-color: rgba(0, 230, 118, 0.15);
-		background: rgba(0, 230, 118, 0.05);
+		border-color: rgba(34, 197, 94, 0.15);
+		background: var(--color-success-subtle);
 	}
 
 	.sse-dot {
@@ -469,8 +452,6 @@
 
 	.sse-indicator.connected .sse-dot {
 		background: var(--color-success);
-		box-shadow: 0 0 6px var(--color-success-glow);
-		animation: pulse-glow 2s ease-in-out infinite;
 	}
 
 	.sse-label {
@@ -492,7 +473,7 @@
 	}
 
 	.search-input, .status-select {
-		background: rgba(255,255,255,0.05);
+		background: var(--color-bg-card);
 		border: 1px solid var(--color-border);
 		color: var(--color-text-primary);
 		padding: 6px 12px;

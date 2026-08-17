@@ -148,8 +148,8 @@
 			statusMsg = {
 				type: 'success',
 				text: count === 1
-					? `✓ Ingested! ID: ${lastId.slice(0, 13)}… (Check dashboard log)`
-					: `✓ Ingested ${count} burst webhooks! Check event log.`
+					? `Ingested. ID: ${lastId.slice(0, 13)}... (Check dashboard log)`
+					: `Ingested ${count} burst webhooks. Check event log.`
 			};
 		} catch (err) {
 			statusMsg = {
@@ -183,14 +183,19 @@
 	}}
 >
 	<!-- Modal Box -->
-	<div class="modal-box glass-panel animate-scale-in">
+	<div class="modal-box animate-fade-in-up">
 		<!-- Header -->
 		<div class="modal-header">
 			<div class="header-title-group">
-				<span class="tester-badge">Frontend Tester</span>
+				<span class="tester-badge">Tester</span>
 				<h3 class="modal-title">Send Test Webhook</h3>
 			</div>
-			<button class="btn-close" onclick={onclose} aria-label="Close modal">✕</button>
+			<button class="btn-close" onclick={onclose} aria-label="Close modal">
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+					<line x1="18" y1="6" x2="6" y2="18"></line>
+					<line x1="6" y1="6" x2="18" y2="18"></line>
+				</svg>
+			</button>
 		</div>
 
 		<!-- Presets -->
@@ -223,7 +228,7 @@
 				onclick={() => selectPreset('dlq_test')}
 				title="Sends to offline port 9999 to test retries & DLQ"
 			>
-				⚠️ Test DLQ Failure
+				Test DLQ Failure
 			</button>
 			<button
 				class="preset-btn"
@@ -249,14 +254,14 @@
 
 			<div class="field-group">
 				<label for="webhook-target" class="field-label">
-					Target URL <span class="label-hint">(Optional — override downstream server)</span>
+					Target URL <span class="label-hint">(Optional)</span>
 				</label>
 				<input
 					id="webhook-target"
 					type="text"
 					class="field-input"
 					bind:value={targetUrl}
-					placeholder="Leave blank for default server, or http://localhost:9999 to trigger DLQ"
+					placeholder="Leave blank for default, or http://localhost:9999 for DLQ"
 				/>
 			</div>
 		</div>
@@ -266,14 +271,14 @@
 			<div class="json-header">
 				<label for="webhook-payload" class="field-label">JSON Payload Body</label>
 				{#if !isValidJson}
-					<span class="json-invalid">⚠️ Invalid JSON syntax</span>
+					<span class="json-invalid">Invalid JSON</span>
 				{:else}
-					<span class="json-valid">✓ Valid JSON</span>
+					<span class="json-valid">Valid JSON</span>
 				{/if}
 			</div>
 			<textarea
 				id="webhook-payload"
-				class="json-editor font-mono"
+				class="json-editor"
 				bind:value={payloadText}
 				rows="11"
 				spellcheck="false"
@@ -300,14 +305,14 @@
 					disabled={!isValidJson || loading}
 					title="Send 5 rapid webhooks to test queue buffering"
 				>
-					⚡ Send 5 Burst
+					Send 5 Burst
 				</button>
 				<button
 					class="btn-primary"
 					onclick={() => handleSend(1)}
 					disabled={!isValidJson || loading}
 				>
-					{loading ? 'Sending…' : '⚡ Send Webhook'}
+					{loading ? 'Sending...' : 'Send Webhook'}
 				</button>
 			</div>
 		</div>
@@ -319,9 +324,7 @@
 		position: fixed;
 		inset: 0;
 		z-index: 1000;
-		background: rgba(10, 11, 15, 0.85);
-		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
+		background: rgba(17, 19, 24, 0.85);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -337,9 +340,8 @@
 		gap: 20px;
 		padding: 28px;
 		border-radius: var(--radius-xl);
-		background: rgba(18, 19, 26, 0.95);
+		background: var(--color-bg-elevated);
 		border: 1px solid var(--color-border);
-		box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
 		overflow-y: auto;
 	}
 
@@ -362,10 +364,10 @@
 		font-size: 0.72rem;
 		font-weight: 700;
 		color: var(--color-accent);
-		background: var(--color-accent-glow);
+		background: var(--color-accent-subtle);
 		padding: 4px 10px;
-		border-radius: 20px;
-		border: 1px solid rgba(108, 92, 231, 0.2);
+		border-radius: var(--radius-sm);
+		border: 1px solid rgba(20, 184, 166, 0.15);
 	}
 
 	.modal-title {
@@ -391,7 +393,6 @@
 	.btn-close:hover {
 		color: var(--color-text-primary);
 		border-color: var(--color-border-active);
-		background: rgba(255, 255, 255, 0.05);
 	}
 
 	/* Presets Row */
@@ -413,9 +414,9 @@
 		font-size: 0.78rem;
 		font-weight: 600;
 		padding: 6px 14px;
-		border-radius: 20px;
+		border-radius: var(--radius-md);
 		border: 1px solid var(--color-border);
-		background: rgba(255, 255, 255, 0.03);
+		background: transparent;
 		color: var(--color-text-secondary);
 		cursor: pointer;
 		transition: all var(--transition-fast);
@@ -427,15 +428,15 @@
 	}
 
 	.preset-btn.active {
-		background: var(--color-accent-glow);
+		background: var(--color-accent-subtle);
 		color: var(--color-accent);
-		border-color: rgba(108, 92, 231, 0.4);
+		border-color: rgba(20, 184, 166, 0.3);
 	}
 
 	.btn-dlq-preset.active {
-		background: var(--color-danger-glow);
+		background: var(--color-danger-subtle);
 		color: var(--color-danger);
-		border-color: rgba(255, 82, 82, 0.4);
+		border-color: rgba(239, 68, 68, 0.3);
 	}
 
 	/* Form Fields */
@@ -474,7 +475,7 @@
 		padding: 10px 14px;
 		border-radius: var(--radius-md);
 		border: 1px solid var(--color-border);
-		background: rgba(0, 0, 0, 0.4);
+		background: var(--color-bg-card);
 		color: var(--color-text-primary);
 		font-family: var(--font-mono);
 		font-size: 0.85rem;
@@ -516,8 +517,9 @@
 		padding: 14px;
 		border-radius: var(--radius-md);
 		border: 1px solid var(--color-border);
-		background: rgba(0, 0, 0, 0.6);
+		background: var(--color-bg-card);
 		color: var(--color-text-primary);
+		font-family: var(--font-mono);
 		font-size: 0.82rem;
 		line-height: 1.5;
 		resize: vertical;
@@ -539,14 +541,14 @@
 	}
 
 	.status-success {
-		background: rgba(0, 230, 118, 0.1);
-		border: 1px solid rgba(0, 230, 118, 0.3);
+		background: var(--color-success-subtle);
+		border: 1px solid rgba(34, 197, 94, 0.2);
 		color: var(--color-success);
 	}
 
 	.status-error {
-		background: rgba(255, 82, 82, 0.1);
-		border: 1px solid rgba(255, 82, 82, 0.3);
+		background: var(--color-danger-subtle);
+		border: 1px solid rgba(239, 68, 68, 0.2);
 		color: var(--color-danger);
 	}
 
@@ -592,8 +594,8 @@
 	.btn-burst {
 		padding: 8px 18px;
 		border-radius: var(--radius-md);
-		border: 1px solid rgba(255, 171, 64, 0.4);
-		background: rgba(255, 171, 64, 0.1);
+		border: 1px solid rgba(245, 158, 11, 0.3);
+		background: var(--color-warning-subtle);
 		color: var(--color-warning);
 		font-weight: 600;
 		font-size: 0.85rem;
@@ -602,32 +604,28 @@
 	}
 
 	.btn-burst:hover:not(:disabled) {
-		background: rgba(255, 171, 64, 0.2);
-		transform: translateY(-1px);
+		border-color: var(--color-warning);
 	}
 
 	.btn-primary {
 		padding: 8px 22px;
 		border-radius: var(--radius-md);
 		border: none;
-		background: linear-gradient(135deg, #6c5ce7, #5f3dc4);
+		background: var(--color-accent);
 		color: #ffffff;
 		font-weight: 600;
 		font-size: 0.85rem;
 		cursor: pointer;
-		transition: all var(--transition-fast);
-		box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+		transition: background var(--transition-fast);
 	}
 
 	.btn-primary:hover:not(:disabled) {
-		transform: translateY(-1px);
-		box-shadow: 0 6px 20px rgba(108, 92, 231, 0.5);
+		background: #0d9488;
 	}
 
 	.btn-primary:disabled,
 	.btn-burst:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
-		transform: none;
 	}
 </style>

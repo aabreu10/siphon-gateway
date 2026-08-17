@@ -51,31 +51,25 @@
 
 	.badge-success {
 		color: var(--color-success);
-		background: var(--color-success-glow);
-		border: 1px solid rgba(0, 230, 118, 0.15);
+		background: var(--color-success-subtle);
+		border: 1px solid rgba(34, 197, 94, 0.15);
 	}
 
 	.badge-warning {
 		color: var(--color-warning);
-		background: var(--color-warning-glow);
-		border: 1px solid rgba(255, 171, 64, 0.15);
-		animation: pulse-subtle 2s ease-in-out infinite;
+		background: var(--color-warning-subtle);
+		border: 1px solid rgba(245, 158, 11, 0.15);
 	}
 
 	.badge-danger {
 		color: var(--color-danger);
-		background: var(--color-danger-glow);
-		border: 1px solid rgba(255, 82, 82, 0.15);
+		background: var(--color-danger-subtle);
+		border: 1px solid rgba(239, 68, 68, 0.15);
 	}
 
 	.badge-pending {
 		color: var(--color-accent);
-		background: var(--color-accent-glow);
-		border: 1px solid rgba(108, 92, 231, 0.15);
-	}
-
-	@keyframes pulse-subtle {
-		0%, 100% { opacity: 1; }
-		50% { opacity: 0.7; }
+		background: var(--color-accent-subtle);
+		border: 1px solid rgba(20, 184, 166, 0.15);
 	}
 </style>

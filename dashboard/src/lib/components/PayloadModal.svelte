@@ -156,8 +156,7 @@
 		overflow: hidden;
 		box-shadow:
 			0 0 0 1px rgba(255, 255, 255, 0.03),
-			0 24px 48px rgba(0, 0, 0, 0.5),
-			0 0 80px var(--color-accent-glow);
+			0 24px 48px rgba(0, 0, 0, 0.5);
 	}
 
 	.modal-header {
