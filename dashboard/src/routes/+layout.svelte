@@ -63,7 +63,11 @@
 				{#if $page.url.pathname.startsWith('/dashboard')}
 					<button class="btn-launch" style="background: var(--color-surface); border: 1px solid var(--color-border);" onclick={async () => {
 						const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
-						await fetch(`${API_BASE}/api/v1/auth/logout`, { method: 'POST', credentials: 'include' });
+						await fetch(`${API_BASE}/api/v1/auth/logout`, { 
+							method: 'POST', 
+							headers: { 'Content-Type': 'application/json' },
+							credentials: 'include' 
+						});
 						window.location.href = '/login';
 					}}>
 						Log out
