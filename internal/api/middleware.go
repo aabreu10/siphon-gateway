@@ -67,12 +67,21 @@ const UserIDKey contextKey = "user_id"
 func AuthMiddleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			authHeader := r.Header.Get("Authorization")
 			var providedToken string
 			
-			if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
+			// 1. Check cookie first
+			if cookie, err := r.Cookie("siphon_auth"); err == nil {
+				providedToken = cookie.Value
+			}
+
+			// 2. Fallback to Authorization header
+			authHeader := r.Header.Get("Authorization")
+			if providedToken == "" && authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
 				providedToken = strings.TrimPrefix(authHeader, "Bearer ")
-			} else if r.URL.Path == "/api/v1/events" {
+			}
+
+			// 3. Fallback to query param (for SSE)
+			if providedToken == "" && r.URL.Path == "/api/v1/events" {
 				providedToken = r.URL.Query().Get("api_key")
 			}
 
@@ -143,6 +152,42 @@ func IngestAuthMiddleware(expectedKey string) func(http.Handler) http.Handler {
 				return
 			}
 
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+// HSTSMiddleware adds Strict-Transport-Security header
+func HSTSMiddleware() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+// MaxBytesMiddleware limits the size of incoming requests
+func MaxBytesMiddleware(limit int64) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			r.Body = http.MaxBytesReader(w, r.Body, limit)
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+// CSRFMiddleware strictly enforces Content-Type: application/json for mutating requests
+func CSRFMiddleware() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodPost || r.Method == http.MethodPut || r.Method == http.MethodPatch {
+				contentType := r.Header.Get("Content-Type")
+				if !strings.HasPrefix(contentType, "application/json") {
+					http.Error(w, `{"error":"invalid content type, must be application/json"}`, http.StatusUnsupportedMediaType)
+					return
+				}
+			}
 			next.ServeHTTP(w, r)
 		})
 	}

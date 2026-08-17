@@ -20,6 +20,7 @@ type Config struct {
 	WorkerConcurrency int
 	AdminAPIKey       string
 	IngestAPIKey      string
+	CorsAllowedOrigin string
 }
 
 // reads env vars with defaults
@@ -40,6 +41,7 @@ func Load() *Config {
 		WorkerConcurrency: getEnvInt("WORKER_CONCURRENCY", 5),
 		AdminAPIKey:       getEnv("ADMIN_API_KEY", ""),
 		IngestAPIKey:      getEnv("INGEST_API_KEY", ""),
+		CorsAllowedOrigin: getEnv("CORS_ALLOWED_ORIGIN", "http://localhost:5173"),
 	}
 }
 
