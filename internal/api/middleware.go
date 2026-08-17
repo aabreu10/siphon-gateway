@@ -133,26 +133,32 @@ func IngestAuthMiddleware(expectedKey string) func(http.Handler) http.Handler {
 				return
 			}
 
+			// 1. Try static API key
 			authHeader := r.Header.Get("Authorization")
 			var providedKey string
-			
 			if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
 				providedKey = strings.TrimPrefix(authHeader, "Bearer ")
 			} else {
 				providedKey = r.URL.Query().Get("api_key")
 			}
 
-			if providedKey == "" {
-				http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+			if providedKey == expectedKey {
+				next.ServeHTTP(w, r)
 				return
 			}
 
-			if providedKey != expectedKey {
-				http.Error(w, `{"error":"forbidden"}`, http.StatusForbidden)
-				return
+			// 2. Try JWT Cookie (allows dashboard simulator to hit this endpoint)
+			if cookie, err := r.Cookie("siphon_auth"); err == nil && cookie.Value != "" {
+				token, _ := jwt.Parse(cookie.Value, func(t *jwt.Token) (interface{}, error) {
+					return jwtSecret, nil
+				})
+				if token != nil && token.Valid {
+					next.ServeHTTP(w, r)
+					return
+				}
 			}
 
-			next.ServeHTTP(w, r)
+			http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
 		})
 	}
 }
