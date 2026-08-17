@@ -19,8 +19,8 @@
 					<svg width="28" height="28" viewBox="0 0 32 32" fill="none">
 						<defs>
 							<linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-								<stop offset="0%" stop-color="#6c5ce7" />
-								<stop offset="100%" stop-color="#a29bfe" />
+								<stop offset="0%" stop-color="#14b8a6" />
+								<stop offset="100%" stop-color="#0d9488" />
 							</linearGradient>
 						</defs>
 						<path d="M16 2L4 8v16l12 6 12-6V8L16 2z" stroke="url(#logo-gradient)" stroke-width="2" fill="none" opacity="0.6"/>
@@ -48,20 +48,20 @@
 					class="nav-link"
 					class:active={$page.url.pathname.startsWith('/dashboard')}
 				>
-					Live Dashboard
+					Dashboard
 				</a>
 			</nav>
 
 			<div class="header-actions">
 				<button class="btn-test-webhook" onclick={() => (showTesterModal = true)}>
-					⚡ Test Webhook
+					Test Webhook
 				</button>
 				<div class="header-status">
 					<span class="status-dot"></span>
 					<span class="status-text">SSE Live</span>
 				</div>
 				<a href="/dashboard" class="btn-launch">
-					Launch App →
+					Launch App
 				</a>
 			</div>
 		</div>
@@ -87,9 +87,7 @@
 		position: sticky;
 		top: 0;
 		z-index: 100;
-		background: rgba(10, 11, 15, 0.8);
-		backdrop-filter: blur(20px);
-		-webkit-backdrop-filter: blur(20px);
+		background: var(--color-bg);
 		border-bottom: 1px solid var(--color-border);
 	}
 
@@ -117,18 +115,15 @@
 		width: 40px;
 		height: 40px;
 		border-radius: var(--radius-md);
-		background: var(--color-accent-glow);
-		border: 1px solid rgba(108, 92, 231, 0.2);
+		background: var(--color-accent-subtle);
+		border: 1px solid rgba(20, 184, 166, 0.2);
 	}
 
 	.brand-name {
 		font-size: 1.1rem;
 		font-weight: 700;
 		letter-spacing: -0.02em;
-		background: linear-gradient(135deg, #e8eaed, #8b8fa3);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
+		color: var(--color-text-primary);
 	}
 
 	.brand-subtitle {
@@ -145,15 +140,15 @@
 		display: flex;
 		align-items: center;
 		gap: 4px;
-		background: rgba(255, 255, 255, 0.02);
+		background: var(--color-bg-card);
 		padding: 4px;
-		border-radius: 24px;
+		border-radius: var(--radius-lg);
 		border: 1px solid var(--color-border);
 	}
 
 	.nav-link {
 		padding: 6px 18px;
-		border-radius: 20px;
+		border-radius: var(--radius-md);
 		font-size: 0.85rem;
 		font-weight: 500;
 		color: var(--color-text-secondary);
@@ -168,7 +163,6 @@
 	.nav-link.active {
 		background: var(--color-bg-elevated);
 		color: var(--color-text-primary);
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 		border: 1px solid var(--color-border-active);
 	}
 
@@ -183,9 +177,9 @@
 		align-items: center;
 		gap: 8px;
 		padding: 6px 14px;
-		border-radius: 20px;
-		border: 1px solid rgba(0, 230, 118, 0.15);
-		background: rgba(0, 230, 118, 0.05);
+		border-radius: var(--radius-md);
+		border: 1px solid rgba(34, 197, 94, 0.15);
+		background: var(--color-success-subtle);
 	}
 
 	.status-dot {
@@ -193,8 +187,6 @@
 		height: 7px;
 		border-radius: 50%;
 		background: var(--color-success);
-		animation: pulse-glow 2s ease-in-out infinite;
-		box-shadow: 0 0 6px var(--color-success-glow);
 	}
 
 	.status-text {
@@ -207,19 +199,17 @@
 		display: inline-flex;
 		align-items: center;
 		padding: 6px 14px;
-		border-radius: 20px;
+		border-radius: var(--radius-md);
 		font-size: 0.82rem;
 		font-weight: 600;
 		color: var(--color-warning);
-		background: var(--color-warning-glow);
-		border: 1px solid rgba(255, 171, 64, 0.3);
+		background: var(--color-warning-subtle);
+		border: 1px solid rgba(245, 158, 11, 0.2);
 		cursor: pointer;
 		transition: all var(--transition-fast);
 	}
 
 	.btn-test-webhook:hover {
-		transform: translateY(-1px);
-		box-shadow: 0 4px 15px rgba(255, 171, 64, 0.25);
 		border-color: var(--color-warning);
 	}
 
@@ -227,19 +217,17 @@
 		display: inline-flex;
 		align-items: center;
 		padding: 6px 16px;
-		border-radius: 20px;
+		border-radius: var(--radius-md);
 		font-size: 0.82rem;
 		font-weight: 600;
 		color: #ffffff;
-		background: linear-gradient(135deg, #6c5ce7, #5f3dc4);
+		background: var(--color-accent);
 		text-decoration: none;
 		transition: all var(--transition-fast);
-		box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
 	}
 
 	.btn-launch:hover {
-		transform: translateY(-1px);
-		box-shadow: 0 6px 20px rgba(108, 92, 231, 0.5);
+		background: #0d9488;
 	}
 
 	.app-main {

@@ -3,7 +3,7 @@
 
 	let simState = $state<SimState>('IDLE');
 	let activeStep = $state(0);
-	let logMessage = $state('System idle — ready for webhook simulation.');
+	let logMessage = $state('System idle. Select a scenario to simulate.');
 	let timer: ReturnType<typeof setTimeout> | null = null;
 
 	function runSimulation(mode: SimState) {
@@ -12,7 +12,7 @@
 		activeStep = 1;
 
 		if (mode === 'SUCCESS') {
-			logMessage = 'POST /api/v1/webhook from Stripe received — instant 200 OK sent.';
+			logMessage = 'POST /api/v1/webhook from Stripe received. Instant 200 OK sent.';
 			timer = setTimeout(() => {
 				activeStep = 2;
 				logMessage = 'Payload persisted in RabbitMQ exchange [webhooks.direct].';
@@ -28,7 +28,7 @@
 				logMessage = 'Downstream responded with 503 Service Unavailable.';
 				timer = setTimeout(() => {
 					activeStep = 3;
-					logMessage = 'Exponential backoff triggered — scheduled retry in 2s (Retry #1/5).';
+					logMessage = 'Exponential backoff triggered. Scheduled retry in 2s (Retry #1/5).';
 				}, 900);
 			}, 900);
 		} else if (mode === 'DLQ') {
@@ -38,18 +38,18 @@
 				logMessage = 'All 5 retry attempts exhausted. Route to Dead Letter Queue.';
 				timer = setTimeout(() => {
 					activeStep = 3;
-					logMessage = 'Webhook isolated in FAILED_DLQ — available for 1-click manual replay.';
+					logMessage = 'Webhook isolated in FAILED_DLQ. Available for 1-click manual replay.';
 				}, 900);
 			}, 900);
 		}
 	}
 </script>
 
-<div class="simulator-card glass-panel">
+<div class="simulator-card">
 	<div class="sim-header">
 		<div class="sim-title-group">
 			<span class="sim-badge">Interactive Demo</span>
-			<h3 class="sim-title">Live Architecture Sandbox</h3>
+			<h3 class="sim-title">Architecture Sandbox</h3>
 		</div>
 		<div class="sim-controls">
 			<button
@@ -182,27 +182,23 @@
 		</div>
 	</div>
 
-	<!-- Interactive Status Terminal -->
-	<div class="sim-terminal">
-		<div class="terminal-dots">
-			<span class="t-dot t-red"></span>
-			<span class="t-dot t-yellow"></span>
-			<span class="t-dot t-green"></span>
-		</div>
-		<span class="terminal-text font-mono">
-			<span class="prompt">$</span> {logMessage}
+	<!-- Status Bar -->
+	<div class="sim-status-bar">
+		<span class="status-bar-text">
+			{logMessage}
 		</span>
 	</div>
 </div>
 
 <style>
 	.simulator-card {
-		padding: 32px;
+		padding: 28px;
 		border-radius: var(--radius-xl);
 		display: flex;
 		flex-direction: column;
-		gap: 28px;
-		background: rgba(18, 19, 26, 0.7);
+		gap: 24px;
+		background: var(--color-bg-card);
+		border: 1px solid var(--color-border);
 	}
 
 	.sim-header {
@@ -224,14 +220,14 @@
 		font-size: 0.72rem;
 		font-weight: 700;
 		color: var(--color-accent);
-		background: var(--color-accent-glow);
+		background: var(--color-accent-subtle);
 		padding: 4px 10px;
-		border-radius: 20px;
-		border: 1px solid rgba(108, 92, 231, 0.2);
+		border-radius: var(--radius-sm);
+		border: 1px solid rgba(20, 184, 166, 0.15);
 	}
 
 	.sim-title {
-		font-size: 1.25rem;
+		font-size: 1.15rem;
 		font-weight: 700;
 		color: var(--color-text-primary);
 	}
@@ -249,7 +245,7 @@
 		padding: 8px 16px;
 		border-radius: var(--radius-md);
 		border: 1px solid var(--color-border);
-		background: rgba(255, 255, 255, 0.02);
+		background: transparent;
 		color: var(--color-text-secondary);
 		cursor: pointer;
 		transition: all var(--transition-fast);
@@ -261,21 +257,21 @@
 	}
 
 	.btn-success.active {
-		background: var(--color-success-glow);
+		background: var(--color-success-subtle);
 		color: var(--color-success);
-		border-color: rgba(0, 230, 118, 0.4);
+		border-color: rgba(34, 197, 94, 0.3);
 	}
 
 	.btn-warning.active {
-		background: var(--color-warning-glow);
+		background: var(--color-warning-subtle);
 		color: var(--color-warning);
-		border-color: rgba(255, 171, 64, 0.4);
+		border-color: rgba(245, 158, 11, 0.3);
 	}
 
 	.btn-danger.active {
-		background: var(--color-danger-glow);
+		background: var(--color-danger-subtle);
 		color: var(--color-danger);
-		border-color: rgba(255, 82, 82, 0.4);
+		border-color: rgba(239, 68, 68, 0.3);
 	}
 
 	/* Diagram Area */
@@ -303,23 +299,19 @@
 	}
 
 	.node-box.active {
-		border-color: rgba(108, 92, 231, 0.5);
-		box-shadow: 0 0 25px rgba(108, 92, 231, 0.15);
+		border-color: rgba(20, 184, 166, 0.4);
 	}
 
 	.node-box.node-success {
-		border-color: rgba(0, 230, 118, 0.5);
-		box-shadow: 0 0 25px rgba(0, 230, 118, 0.2);
+		border-color: rgba(34, 197, 94, 0.4);
 	}
 
 	.node-box.node-warning {
-		border-color: rgba(255, 171, 64, 0.5);
-		box-shadow: 0 0 25px rgba(255, 171, 64, 0.2);
+		border-color: rgba(245, 158, 11, 0.4);
 	}
 
 	.node-box.node-danger {
-		border-color: rgba(255, 82, 82, 0.5);
-		box-shadow: 0 0 25px rgba(255, 82, 82, 0.2);
+		border-color: rgba(239, 68, 68, 0.4);
 	}
 
 	.node-icon {
@@ -360,7 +352,7 @@
 	}
 
 	.connector.active {
-		background: rgba(108, 92, 231, 0.3);
+		background: rgba(20, 184, 166, 0.3);
 	}
 
 	.connector-label {
@@ -376,7 +368,6 @@
 		height: 10px;
 		border-radius: 50%;
 		background: var(--color-accent);
-		box-shadow: 0 0 10px var(--color-accent);
 		position: absolute;
 		opacity: 0;
 	}
@@ -387,12 +378,10 @@
 
 	.packet-warning {
 		background: var(--color-warning);
-		box-shadow: 0 0 10px var(--color-warning);
 	}
 
 	.packet-danger {
 		background: var(--color-danger);
-		box-shadow: 0 0 10px var(--color-danger);
 	}
 
 	@keyframes travel {
@@ -412,40 +401,19 @@
 		}
 	}
 
-	/* Terminal */
-	.sim-terminal {
+	/* Status Bar */
+	.sim-status-bar {
 		display: flex;
 		align-items: center;
-		gap: 14px;
-		padding: 14px 20px;
-		background: rgba(0, 0, 0, 0.4);
+		padding: 12px 16px;
+		background: var(--color-bg-elevated);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
 	}
 
-	.terminal-dots {
-		display: flex;
-		gap: 6px;
-	}
-
-	.t-dot {
-		width: 8px;
-		height: 8px;
-		border-radius: 50%;
-	}
-
-	.t-red { background: #ff5f56; }
-	.t-yellow { background: #ffbd2e; }
-	.t-green { background: #27c93f; }
-
-	.terminal-text {
+	.status-bar-text {
 		font-family: var(--font-mono);
 		font-size: 0.8rem;
 		color: var(--color-text-secondary);
-	}
-
-	.prompt {
-		color: var(--color-accent);
-		font-weight: 700;
 	}
 </style>

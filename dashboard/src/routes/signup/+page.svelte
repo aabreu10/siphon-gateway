@@ -1,9 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import ShinyText from '$lib/components/landing/ShinyText.svelte';
-	import BorderGlowButton from '$lib/components/landing/BorderGlowButton.svelte';
-	import SpotlightCard from '$lib/components/svelte-bits/SpotlightCard.svelte';
 
 	let email = $state('');
 	let password = $state('');
@@ -50,26 +47,30 @@
 	}
 </script>
 
-<div class="login-container">
-	<SpotlightCard class="login-card glass-panel hover-glow">
-		<div class="login-header">
-			<h2><ShinyText text="Siphon Gateway" speed={3} /></h2>
-			<p>Create an account to manage your Webhook Infrastructure.</p>
+<svelte:head>
+	<title>Sign Up — Siphon Gateway</title>
+</svelte:head>
+
+<div class="auth-container">
+	<div class="auth-card">
+		<div class="auth-header">
+			<h2>Siphon Gateway</h2>
+			<p>Create an account to manage your webhook infrastructure.</p>
 		</div>
 
-		<form onsubmit={(e) => { e.preventDefault(); handleSignup(); }} class="login-form">
+		<form onsubmit={(e) => { e.preventDefault(); handleSignup(); }} class="auth-form">
 			<div class="input-group">
 				<input
 					type="email"
 					bind:value={email}
 					placeholder="Email Address"
-					class="api-input"
+					class="auth-input"
 				/>
 				<input
 					type="password"
 					bind:value={password}
 					placeholder="Password"
-					class="api-input"
+					class="auth-input"
 				/>
 			</div>
 
@@ -77,21 +78,19 @@
 				<div class="error-msg">{error}</div>
 			{/if}
 
-			<div class="submit-btn" role="button" tabindex="0" onclick={handleSignup} onkeydown={(e) => { if (e.key === 'Enter') handleSignup(); }}>
-				<BorderGlowButton>
-					{isLoading ? 'Creating Account...' : 'Sign Up'}
-				</BorderGlowButton>
-			</div>
+			<button type="submit" class="btn-submit" disabled={isLoading}>
+				{isLoading ? 'Creating Account...' : 'Sign Up'}
+			</button>
 
-			<div class="signup-link">
+			<div class="auth-link">
 				Already have an account? <a href="/login">Log in</a>
 			</div>
 		</form>
-	</SpotlightCard>
+	</div>
 </div>
 
 <style>
-	.login-container {
+	.auth-container {
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -99,35 +98,34 @@
 		width: 100%;
 	}
 
-	:global(.login-card) {
+	.auth-card {
 		width: 100%;
 		max-width: 400px;
-		background: rgba(18, 19, 26, 0.6);
+		background: var(--color-bg-card);
+		border: 1px solid var(--color-border);
 		border-radius: var(--radius-xl);
-	}
-
-	:global(.login-card .spotlight-content) {
 		padding: 40px;
 		display: flex;
 		flex-direction: column;
 		gap: 24px;
 	}
 
-	.login-header h2 {
-		font-size: 1.8rem;
+	.auth-header h2 {
+		font-size: 1.6rem;
 		margin: 0 0 8px 0;
 		font-weight: 700;
 		text-align: center;
+		color: var(--color-text-primary);
 	}
 
-	.login-header p {
+	.auth-header p {
 		color: var(--color-text-secondary);
 		font-size: 0.9rem;
 		text-align: center;
 		margin: 0;
 	}
 
-	.login-form {
+	.auth-form {
 		display: flex;
 		flex-direction: column;
 		gap: 20px;
@@ -139,56 +137,71 @@
 		gap: 8px;
 	}
 
-	.api-input {
-		background: rgba(0, 0, 0, 0.2);
+	.auth-input {
+		background: var(--color-bg-elevated);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
 		padding: 12px 16px;
 		color: var(--color-text-primary);
-		font-family: var(--font-mono);
+		font-family: var(--font-sans);
 		font-size: 0.9rem;
-		transition: all 0.2s ease;
+		transition: border-color var(--transition-fast);
 		width: 100%;
 		box-sizing: border-box;
 	}
 
-	.api-input:focus {
+	.auth-input:focus {
 		outline: none;
 		border-color: var(--color-accent);
-		box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.2);
 	}
 
 	.error-msg {
 		color: var(--color-danger);
 		font-size: 0.85rem;
-		background: var(--color-danger-glow);
+		background: var(--color-danger-subtle);
 		padding: 8px 12px;
 		border-radius: var(--radius-sm);
-		border: 1px solid rgba(255, 82, 82, 0.2);
+		border: 1px solid rgba(239, 68, 68, 0.2);
 		text-align: center;
 	}
 
-	.submit-btn {
+	.btn-submit {
 		width: 100%;
-		display: flex;
-		justify-content: center;
-		margin-top: 10px;
-	}
-
-	.signup-link {
-		text-align: center;
-		font-size: 0.9rem;
-		color: var(--color-text-secondary);
+		padding: 12px;
+		border-radius: var(--radius-md);
+		border: none;
+		background: var(--color-accent);
+		color: #ffffff;
+		font-family: var(--font-sans);
+		font-weight: 600;
+		font-size: 0.95rem;
+		cursor: pointer;
+		transition: background var(--transition-fast);
 		margin-top: 8px;
 	}
 
-	.signup-link a {
+	.btn-submit:hover:not(:disabled) {
+		background: #0d9488;
+	}
+
+	.btn-submit:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+
+	.auth-link {
+		text-align: center;
+		font-size: 0.9rem;
+		color: var(--color-text-secondary);
+	}
+
+	.auth-link a {
 		color: var(--color-accent);
 		text-decoration: none;
 		font-weight: 500;
 	}
 
-	.signup-link a:hover {
+	.auth-link a:hover {
 		text-decoration: underline;
 	}
 </style>
